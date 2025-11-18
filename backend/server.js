@@ -5,7 +5,7 @@ const path = require('path');
 const http = require('http');
 const WebSocket = require('ws');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;

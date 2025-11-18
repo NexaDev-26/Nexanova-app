@@ -4,7 +4,15 @@ import axios from 'axios';
 const getApiUrl = () => {
   // Check for environment variable first (for production builds)
   if (process.env.REACT_APP_API_URL) {
+    console.log('📍 Using REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
+  }
+  
+  // In Vercel preview/production, use the Vercel API URL pattern
+  if (process.env.REACT_APP_VERCEL_URL) {
+    const apiUrl = `https://${process.env.REACT_APP_VERCEL_URL}/api`;
+    console.log('📍 Using Vercel URL:', apiUrl);
+    return apiUrl;
   }
   
   // Get the current hostname (works for localhost, IP addresses, and domains)

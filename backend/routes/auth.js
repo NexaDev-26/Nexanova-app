@@ -12,8 +12,12 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
     process.exit(1);
   }
   // Development fallback (not secure - only for local development)
-  console.warn('⚠️  WARNING: Using default JWT_SECRET. Set JWT_SECRET in .env for production!');
-  return 'nexanova-secret-key-change-in-production';
+  // This message only appears if JWT_SECRET is not set in .env
+  const fallbackSecret = 'nexanova-secret-key-change-in-production';
+  if (!process.env.JWT_SECRET && process.env.NODE_ENV !== 'production') {
+    console.log('ℹ️  Using default JWT_SECRET for development. Set JWT_SECRET in .env for production.');
+  }
+  return fallbackSecret;
 })();
 
 // Input validation helper
