@@ -26,7 +26,7 @@ const corsOptions = {
 
     const allowed = process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',')
-      : ['http://localhost:3000'];
+      : ['https://nexanova-frontend.vercel.app/'];
 
     return callback(null, allowed.includes(origin));
   },
