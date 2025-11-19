@@ -12,13 +12,14 @@
 -- ============================================
 
 -- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 
 -- ============================================
 -- USERS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     nickname VARCHAR(50) UNIQUE,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- HABITS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habits (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(100) NOT NULL,
     type TEXT CHECK(type IN ('break', 'build')) NOT NULL,
@@ -67,7 +68,7 @@ CREATE TABLE IF NOT EXISTS habits (
 -- HABIT COMPLETIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_completions (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
     completion_date DATE NOT NULL,
     notes TEXT,
@@ -84,7 +85,7 @@ CREATE TABLE IF NOT EXISTS habit_completions (
 -- HABIT JOURNAL ENTRIES TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_journal_entries (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
     entry_date DATE NOT NULL,
     reflection TEXT,
@@ -102,7 +103,7 @@ CREATE TABLE IF NOT EXISTS habit_journal_entries (
 -- HABIT STREAKS HISTORY TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_streaks_history (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
     streak_value INTEGER NOT NULL,
     start_date DATE NOT NULL,
@@ -115,7 +116,7 @@ CREATE TABLE IF NOT EXISTS habit_streaks_history (
 -- HABIT CHALLENGES TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_challenges (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid()PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     challenge_type TEXT CHECK(challenge_type IN ('30_day', 'stacking', 'micro', 'custom')),
     challenge_name VARCHAR(100) NOT NULL,
@@ -135,7 +136,7 @@ CREATE TABLE IF NOT EXISTS habit_challenges (
 -- HABIT TEMPLATES TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_templates (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(100) NOT NULL,
     category VARCHAR(50),
@@ -153,7 +154,7 @@ CREATE TABLE IF NOT EXISTS habit_templates (
 -- HABIT ANALYTICS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_analytics (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
     date DATE NOT NULL,
     completion_rate DECIMAL(5,2) DEFAULT 0,
@@ -168,7 +169,7 @@ CREATE TABLE IF NOT EXISTS habit_analytics (
 -- HABIT REMINDERS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS habit_reminders (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid()PRIMARY KEY,
     habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
     reminder_time TIME NOT NULL,
     days_of_week TEXT,
@@ -183,7 +184,7 @@ CREATE TABLE IF NOT EXISTS habit_reminders (
 -- FINANCE TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS finance (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type TEXT CHECK(type IN ('income', 'expense')) NOT NULL,
     category VARCHAR(50),
@@ -196,7 +197,7 @@ CREATE TABLE IF NOT EXISTS finance (
 -- AI CHATS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS ai_chats (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     message TEXT NOT NULL,
     response TEXT,
@@ -209,7 +210,7 @@ CREATE TABLE IF NOT EXISTS ai_chats (
 -- REWARDS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS rewards (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type TEXT CHECK(type IN ('habit', 'financial', 'mind_reset')) NOT NULL,
     title VARCHAR(100) NOT NULL,
@@ -221,7 +222,7 @@ CREATE TABLE IF NOT EXISTS rewards (
 -- JOURNEY BLUEPRINTS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS journey_blueprints (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     path TEXT,
     ai_personality TEXT,
@@ -233,7 +234,7 @@ CREATE TABLE IF NOT EXISTS journey_blueprints (
 -- JOURNAL ENTRIES TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS journal_entries (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200),
     content TEXT NOT NULL,
