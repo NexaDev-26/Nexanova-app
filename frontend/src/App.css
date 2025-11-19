@@ -1,128 +1,75 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+/* App.css - NexaNova Frontend */
 
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { ToastProvider } from './context/ToastContext';
-import { LocaleProvider } from './context/LocaleContext';
-
-import ErrorBoundary from './ErrorBoundary';
-import LoadingSpinner from './components/LoadingSpinner';
-import Header from './components/Header';
-import FloatingAIChat from './components/FloatingAIChat';
-
-import './App.css';
-import './styles/Toast.css';
-
-// Lazy-loaded pages
-const Onboarding = lazy(() => import('./pages/Onboarding'));
-const Login = lazy(() => import('./pages/Login'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const AIChat = lazy(() => import('./pages/AIChat'));
-const HabitTracker = lazy(() => import('./pages/HabitTracker'));
-const FinanceTracker = lazy(() => import('./pages/FinanceTracker'));
-const Journal = lazy(() => import('./pages/Journal'));
-const Profile = lazy(() => import('./pages/Profile'));
-const QRCode = lazy(() => import('./pages/QRCode'));
-
-// Protected Route
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner size="large" text="Loading your journey..." />;
-  }
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
-// Public Route (redirects logged in users)
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner size="large" />;
-  }
-
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
-};
-
-function AppRoutes() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { isAuthenticated } = useAuth();
-  const location = useLocation();
-
-  // Network status detection
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Public pages (no header or AI chat)
-  const PUBLIC_PAGES = ['/onboarding', '/login', '/forgot-password'];
-  const isPublic = PUBLIC_PAGES.includes(location.pathname);
-
-  const showHeaderAndAI = isAuthenticated && !isPublic;
-
-  return (
-    <div className={`App ${showHeaderAndAI ? 'app-with-header' : ''}`}>
-
-      {!isOnline && (
-        <div className="offline-banner">
-          📡 You're offline. Your data will sync when you're back online.
-        </div>
-      )}
-
-      {showHeaderAndAI && <Header />}
-
-      <Suspense fallback={<LoadingSpinner size="large" text="Loading..." />}>
-        <Routes>
-          <Route path="/onboarding" element={<PublicRoute><Onboarding /></PublicRoute>} />
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-          <Route path="/habits" element={<ProtectedRoute><HabitTracker /></ProtectedRoute>} />
-          <Route path="/finance" element={<ProtectedRoute><FinanceTracker /></ProtectedRoute>} />
-          <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/qr" element={<ProtectedRoute><QRCode /></ProtectedRoute>} />
-
-          <Route path="/" element={<Navigate to="/onboarding" replace />} />
-        </Routes>
-      </Suspense>
-
-      {showHeaderAndAI && <FloatingAIChat />}
-    </div>
-  );
+/* General App Styles */
+.App {
+  font-family: 'Arial', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-function App() {
-  return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <LocaleProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <Router>
-                <AppRoutes />
-              </Router>
-            </AuthProvider>
-          </ToastProvider>
-        </LocaleProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
+/* Header and Main Content */
+.app-with-header {
+  padding-top: 70px; /* adjust according to header height */
 }
 
-export default App;
+/* Offline Banner */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffcccc;
+  color: #900;
+  text-align: center;
+  padding: 8px 0;
+  font-weight: bold;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Loading Spinner Container */
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+}
+
+/* Floating AI Chat Styles */
+.floating-ai-chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 1001;
+}
+
+/* Pages spacing */
+.page-container {
+  padding: 20px;
+}
+
+/* Forms */
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+button {
+  cursor: pointer;
+}
