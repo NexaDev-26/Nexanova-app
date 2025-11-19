@@ -84,4 +84,8 @@ app.use((req, res, next) => {
 // ========================================================================== */
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
-app.use(bodyParser
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use('/api', generalLimiter);
+app.use('/api/auth', authLimiter);
+
