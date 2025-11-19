@@ -1,44 +1,24 @@
 import React, { createContext, useContext, useState } from 'react';
-import Toast from '../components/Toast';
 
 const ToastContext = createContext();
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
-  }
-  return context;
-};
+export const useToast = () => useContext(ToastContext);
 
 export const ToastProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
+  const [messages, setMessages] = useState([]);
 
-  const showToast = (message, type = 'info', duration = 3000) => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-    return id;
-  };
-
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  const addToast = (msg) => {
+    setMessages([...messages, msg]);
+    setTimeout(() => setMessages((msgs) => msgs.slice(1)), 3000);
   };
 
   return (
-    <ToastContext.Provider value={{ showToast, removeToast }}>
+    <ToastContext.Provider value={{ addToast }}>
       {children}
       <div className="toast-container">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            duration={toast.duration}
-            onClose={() => removeToast(toast.id)}
-          />
+        {messages.map((msg, idx) => (
+          <div key={idx} className="toast">{msg}</div>
         ))}
       </div>
     </ToastContext.Provider>
   );
 };
-
