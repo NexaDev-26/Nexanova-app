@@ -1,3 +1,31 @@
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+// Allow frontend origin
+app.use(cors({
+  origin: 'https://nexanovaa.vercel.app', // your Vercel frontend
+  credentials: true // allow cookies or auth headers if needed
+}));
+
+// Parse JSON requests
+app.use(express.json());
+
+// Example route (keep your existing routes too)
+app.get('/theme', (req, res) => {
+  res.json({ theme: 'light', success: true });
+});
+
+// Your existing routes go here
+// app.use('/auth', authRoutes);
+// app.use('/user', userRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+
+
 // backend/server.js
 require('dotenv').config();
 const express = require('express');
