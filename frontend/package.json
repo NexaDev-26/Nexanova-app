@@ -35,5 +35,9 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10"
+  }
 }
