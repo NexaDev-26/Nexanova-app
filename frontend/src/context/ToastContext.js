@@ -1,34 +1,44 @@
 import React, { createContext, useContext, useState } from 'react';
+import Toast from '../components/Toast';
 
 const ToastContext = createContext();
 
-export const useToast = () => useContext(ToastContext);
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within ToastProvider');
+  }
+  return context;
+};
 
 export const ToastProvider = ({ children }) => {
-  const [messages, setMessages] = useState([]);
+  const [toasts, setToasts] = useState([]);
 
-  const show = (msg) => {
-    setMessages((m) => [...m, msg]);
-    setTimeout(() => setMessages((m) => m.slice(1)), 3000);
+  const showToast = (message, type = 'info', duration = 3000) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type, duration }]);
+
+    // Auto-remove toast after duration
+    setTimeout(() => removeToast(id), duration);
+    return id;
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
-      <div style={{ position: 'fixed', right: 12, bottom: 12, zIndex: 1000 }}>
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              background: '#222',
-              color: '#fff',
-              padding: '8px 12px',
-              marginTop: 8,
-              borderRadius: 6,
-            }}
-          >
-            {m}
-          </div>
+      <div className="toast-container" style={{ position: 'fixed', bottom: 12, right: 12, zIndex: 1000 }}>
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            duration={toast.duration}
+            onClose={() => removeToast(toast.id)}
+          />
         ))}
       </div>
     </ToastContext.Provider>
