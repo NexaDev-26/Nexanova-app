@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import '../styles/Onboarding.css';
 
-// Password strength checker
+// --------------------- UTILS ---------------------
 const checkPasswordStrength = (password) => {
   if (!password) return { strength: 'none', score: 0, feedback: [], isValid: false };
 
@@ -33,65 +33,196 @@ const checkPasswordStrength = (password) => {
   return { strength, score, feedback, isValid: score >= 3 };
 };
 
+const calculateMoodScore = (emotionalScan) => {
+  if (!emotionalScan || Object.keys(emotionalScan).length === 0) return 5;
+  const feelingAnswer = emotionalScan[1];
+  if (!feelingAnswer) return 5;
+
+  const feelingMap = {
+    '😢 Struggling': 2,
+    '😐 Okay': 5,
+    '🙂 Good': 7,
+    '😄 Great': 9
+  };
+
+  for (const [key, value] of Object.entries(feelingMap)) {
+    if (feelingAnswer.includes(key)) return value;
+  }
+
+  const answer = feelingAnswer.toLowerCase();
+  if (answer.includes('struggling') || answer.includes('sad')) return 2;
+  if (answer.includes('okay') || answer.includes('neutral')) return 5;
+  if (answer.includes('good') || answer.includes('happy')) return 7;
+  if (answer.includes('great') || answer.includes('excellent')) return 9;
+
+  return 5;
+};
+
+// --------------------- COMPONENTS ---------------------
+const StepWrapper = ({ title, description, children }) => (
+  <div className="onboarding-step fade-in">
+    <h2>{title}</h2>
+    {description && <p className="step-description">{description}</p>}
+    {children}
+  </div>
+);
+
+const WelcomeStep = ({ onNext }) => (
+  <StepWrapper title="Welcome to NexaNova" description="Your Private Healing Space">
+    <div className="logo-animation">🌱</div>
+    <p className="description">
+      Transform your mind, habits, and finances with AI-powered guidance. Built for African youth, designed for growth.
+    </p>
+    <div className="button-group">
+      <button className="btn btn-primary" onClick={onNext}>Start My Journey</button>
+      <button className="btn btn-secondary" onClick={() => window.open('#', '_blank')}>Learn More</button>
+    </div>
+    <p className="login-prompt">
+      Already have an account? <Link to="/login" className="login-link">Login here</Link>
+    </p>
+  </StepWrapper>
+);
+
+const PathSelectionStep = ({ selectedPath, onSelect, onNext, formData, updateFormData }) => {
+  const paths = [
+    { id: 'mind_reset', title: 'Mind Reset', icon: '🧠', description: 'Heal your mind, find peace, build resilience' },
+    { id: 'money_builder', title: 'Money Builder', icon: '💰', description: 'Build financial habits, save, and grow wealth' },
+    { id: 'habit_transformer', title: 'Habit Transformer', icon: '✨', description: 'Break bad habits, build good ones, transform your life' },
+    { id: 'all', title: 'All of the Above', icon: '🌟', description: 'Complete transformation journey' }
+  ];
+
+  return (
+    <StepWrapper title="Choose Your Path" description="Select the journey that calls to you">
+      <div className="path-cards">
+        {paths.map(path => (
+          <div key={path.id} className={`path-card ${selectedPath === path.id ? 'selected' : ''}`} onClick={() => onSelect(path.id)}>
+            <div className="path-icon">{path.icon}</div>
+            <h3>{path.title}</h3>
+            <p>{path.description}</p>
+          </div>
+        ))}
+      </div>
+      <div className="personality-selection">
+        <h3>Choose Your AI Mentor</h3>
+        <div className="personality-options">
+          {['wise_sage', 'coach', 'friend'].map(p => (
+            <label key={p}>
+              <input type="radio" name="personality" value={p} checked={formData.ai_personality === p} onChange={(e) => updateFormData('ai_personality', e.target.value)} />
+              <span>{p.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <button className="btn btn-primary" onClick={onNext} disabled={!selectedPath || !formData.ai_personality}>Continue</button>
+    </StepWrapper>
+  );
+};
+
+const PrivacySetupStep = ({ formData, updateFormData, onNext }) => {
+  const [passwordStrength, setPasswordStrength] = useState({ strength: 'none', score: 0, feedback: [], isValid: false });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handlePasswordChange = (e) => {
+    const password = e.target.value;
+    updateFormData('password', password);
+    setPasswordStrength(checkPasswordStrength(password));
+  };
+
+  return (
+    <StepWrapper title="Privacy Setup" description="Your data, your control">
+      <div className="form-group">
+        <label>Stay Anonymous?</label>
+        <div className="toggle-group">
+          <button className={`toggle-btn ${formData.anonymous_mode ? 'active' : ''}`} onClick={() => updateFormData('anonymous_mode', true)}>Yes, Stay Anonymous</button>
+          <button className={`toggle-btn ${!formData.anonymous_mode ? 'active' : ''}`} onClick={() => updateFormData('anonymous_mode', false)}>Use Nickname</button>
+        </div>
+        {!formData.anonymous_mode && <input type="text" placeholder="Choose a nickname" value={formData.nickname || ''} onChange={(e) => updateFormData('nickname', e.target.value)} className="input-field" />}
+      </div>
+      <div className="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="your@email.com" value={formData.email} onChange={(e) => updateFormData('email', e.target.value)} className="input-field" />
+      </div>
+      <div className="form-group">
+        <label>Password</label>
+        <div style={{ position: 'relative' }}>
+          <input type={showPassword ? 'text' : 'password'} placeholder="Create a strong password" value={formData.password} onChange={handlePasswordChange} className="input-field" />
+          <button type="button" onClick={() => setShowPassword(!showPassword)} className="password-toggle-btn">{showPassword ? '👁️' : '👁️‍🗨️'}</button>
+        </div>
+        {formData.password && (
+          <div className="password-strength-indicator">
+            <div className={`strength-bar ${passwordStrength.strength}`} style={{ width: `${(passwordStrength.score / 5) * 100}%` }} />
+            <ul>{passwordStrength.feedback.map((req, i) => <li key={i}>{req}</li>)}</ul>
+          </div>
+        )}
+      </div>
+      <div className="toggle-option">
+        <label><input type="checkbox" checked={formData.offline_mode} onChange={(e) => updateFormData('offline_mode', e.target.checked)} />Enable Offline Mode</label>
+      </div>
+      <div className="toggle-option">
+        <label><input type="checkbox" checked={formData.store_chat} onChange={(e) => updateFormData('store_chat', e.target.checked)} />Store Chat History</label>
+      </div>
+      <button className="btn btn-primary" onClick={onNext} disabled={!formData.email || !formData.password || !passwordStrength.isValid}>Continue</button>
+    </StepWrapper>
+  );
+};
+
+const EmotionalScanStep = ({ formData, updateFormData, onComplete, loading }) => {
+  const [answers, setAnswers] = useState({});
+  const questions = [
+    { id: 1, question: 'How are you feeling right now?', options: ['😢 Struggling', '😐 Okay', '🙂 Good', '😄 Great'] },
+    { id: 2, question: 'What area needs the most support?', options: ['Mental wellness', 'Financial stability', 'Habit building', 'All of the above'] },
+    { id: 3, question: 'What motivates you?', options: ['Personal growth', 'Financial freedom', 'Better habits', 'Overall transformation'] },
+    { id: 4, question: 'How do you prefer to learn?', options: ['Through reflection', 'Action steps', 'Stories & proverbs', 'All methods'] },
+    { id: 5, question: 'What is your biggest challenge?', options: ['Staying consistent', 'Managing emotions', 'Financial planning', 'Breaking bad habits'] }
+  ];
+
+  const handleAnswer = (qid, ans) => setAnswers({ ...answers, [qid]: ans });
+  const allAnswered = Object.keys(answers).length === questions.length;
+
+  return (
+    <StepWrapper title="Emotional Scan" description="Help us understand you better">
+      {questions.map(q => (
+        <div key={q.id} className="question-card">
+          <h4>{q.question}</h4>
+          <div className="options-grid">
+            {q.options.map((opt, i) => (
+              <button key={i} className={`option-btn ${answers[q.id] === opt ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <button className="btn btn-primary" onClick={() => { updateFormData('emotional_scan', answers); onComplete(); }} disabled={!allAnswered || loading}>
+        {loading ? 'Setting up your journey...' : 'Complete Journey Setup'}
+      </button>
+    </StepWrapper>
+  );
+};
+
+// --------------------- MAIN ONBOARDING ---------------------
 const Onboarding = () => {
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
   const { showToast } = useToast();
 
-  useEffect(() => {
-    if (isAuthenticated) navigate('/dashboard');
-  }, [isAuthenticated, navigate]);
-
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    nickname: '',
-    path: '',
-    ai_personality: '',
-    anonymous_mode: false,
-    offline_mode: true,
-    store_chat: true,
-    emotional_scan: {}
+    email: '', password: '', nickname: '', path: '', ai_personality: '',
+    anonymous_mode: false, offline_mode: true, store_chat: true, emotional_scan: {}
   });
 
-  const handleNext = () => {
-    if (step < 4) setStep(step + 1);
-    else handleComplete();
-  };
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard');
+  }, [isAuthenticated, navigate]);
 
-  const calculateMoodScore = (emotionalScan) => {
-    if (!emotionalScan || Object.keys(emotionalScan).length === 0) return 5;
-
-    const feelingAnswer = emotionalScan[1];
-    if (!feelingAnswer) return 5;
-
-    const feelingMap = {
-      '😢 Struggling': 2,
-      '😐 Okay': 5,
-      '🙂 Good': 7,
-      '😄 Great': 9
-    };
-
-    for (const [key, value] of Object.entries(feelingMap)) {
-      if (feelingAnswer.includes(key)) return value;
-    }
-
-    const answer = feelingAnswer.toLowerCase();
-    if (answer.includes('struggling') || answer.includes('sad')) return 2;
-    if (answer.includes('okay') || answer.includes('neutral')) return 5;
-    if (answer.includes('good') || answer.includes('happy')) return 7;
-    if (answer.includes('great') || answer.includes('excellent')) return 9;
-
-    return 5;
-  };
+  const handleNext = () => setStep(step + 1);
 
   const handleComplete = async () => {
     setError('');
     setLoading(true);
 
+    // ----------------- VALIDATION -----------------
     if (!formData.email || !formData.password || !formData.path || !formData.ai_personality) {
       setError('Please complete all required fields');
       setLoading(false);
@@ -100,14 +231,14 @@ const Onboarding = () => {
 
     const passwordCheck = checkPasswordStrength(formData.password);
     if (!passwordCheck.isValid) {
-      setError('Password too weak. Must have 8+ chars, uppercase, lowercase, number, special char.');
+      setError('Password is too weak. Please include uppercase, lowercase, numbers, and special characters.');
       setLoading(false);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError('Invalid email address');
       setLoading(false);
       return;
     }
@@ -133,29 +264,11 @@ const Onboarding = () => {
         setError(msg);
         showToast(msg, 'error');
       }
-    } catch (error) {
+    } catch (err) {
       setLoading(false);
-      console.error('❌ Onboarding error:', error);
-
-      const networkErrors = ['ECONNREFUSED', 'ERR_NETWORK', 'Network Error'];
-
-      if (networkErrors.includes(error.code) || error.message?.includes('Network')) {
-        const msg = 'Cannot connect to server. Check backend running, network, firewall, ports.';
-        setError(msg);
-        showToast('Network error', 'error');
-      } else if (error.code === 'ECONNABORTED') {
-        const msg = 'Request timed out. Try again or check connection.';
-        setError(msg);
-        showToast('Request timeout', 'error');
-      } else if (error.response?.status === 404 || error.message?.includes('endpoint')) {
-        const msg = 'Registration endpoint not found. Check backend and routes.';
-        setError(msg);
-        showToast('Endpoint not found', 'error');
-      } else {
-        const msg = error.message || 'Registration failed. Please try again.';
-        setError(msg);
-        showToast(msg, 'error');
-      }
+      console.error(err);
+      setError('Registration failed. Check network/backend.');
+      showToast('Registration error', 'error');
     }
   };
 
@@ -163,40 +276,15 @@ const Onboarding = () => {
 
   return (
     <div className="onboarding">
+      <div className="progress-bar">
+        <div className="progress" style={{ width: `${(step / 4) * 100}%` }} />
+      </div>
       <div className="onboarding-container">
-        {error && (
-          <div className="error-banner">
-            <span>⚠️</span>
-            <span>{error}</span>
-            <button onClick={() => setError('')}>✕</button>
-          </div>
-        )}
-
-        {/* Add your onboarding steps UI here */}
-        <div className="onboarding-step">
-          {/* Example Step */}
-          {step === 1 && (
-            <div>
-              <h2>Step 1: Create Account</h2>
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => updateFormData('email', e.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => updateFormData('password', e.target.value)}
-              />
-              <button onClick={handleNext} disabled={loading}>
-                {loading ? 'Loading...' : 'Next'}
-              </button>
-            </div>
-          )}
-          {/* Add steps 2-4 similarly */}
-        </div>
+        {error && <div className="error-banner"><span>⚠️</span><span>{error}</span><button onClick={() => setError('')}>✕</button></div>}
+        {step === 1 && <WelcomeStep onNext={handleNext} />}
+        {step === 2 && <PathSelectionStep selectedPath={formData.path} onSelect={(path) => updateFormData('path', path)} onNext={handleNext} formData={formData} updateFormData={updateFormData} />}
+        {step === 3 && <PrivacySetupStep formData={formData} updateFormData={updateFormData} onNext={handleNext} />}
+        {step === 4 && <EmotionalScanStep formData={formData} updateFormData={updateFormData} onComplete={handleComplete} loading={loading} />}
       </div>
     </div>
   );
