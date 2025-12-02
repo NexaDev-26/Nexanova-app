@@ -2,53 +2,94 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('../config/database');
+const dbAdapter = require('../config/dbAdapter');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? (() => { console.error('Missing JWT_SECRET'); process.exit(1); })() : 'dev-secret');
 
 /* Register */
 router.post('/register', async (req, res) => {
-  const { nickname, email, password, path, ai_personality, anonymous_mode = false } = req.body;
-  if (!email || !password || !path || !ai_personality) return res.status(400).json({ success: false, message: 'Missing required fields' });
+  try {
+    const { nickname, email, password, path, ai_personality, anonymous_mode = false } = req.body;
+    if (!email || !password || !path || !ai_personality) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
 
-  const sanitized = email.trim().toLowerCase();
-  bcrypt.hash(password, 10, (err, hash) => {
-    if (err) return res.status(500).json({ success: false, message: 'Hash error' });
-
-    const stmt = `INSERT INTO users (nickname, email, password_hash, path, ai_personality, anonymous_mode) VALUES (?, ?, ?, ?, ?, ?)`;
-    db.run(stmt, [nickname || null, sanitized, hash, path, ai_personality, anonymous_mode ? 1 : 0], function(insertErr) {
-      if (insertErr) {
-        if (insertErr.message.includes('UNIQUE')) return res.status(400).json({ success: false, message: 'Email already used' });
-        return res.status(500).json({ success: false, message: 'DB insert error' });
-      }
-      const userId = this.lastID;
-      const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
-      db.get('SELECT id, nickname, email, path, ai_personality, anonymous_mode, mood_score, created_at FROM users WHERE id = ?', [userId], (e, row) => {
-        if (e) return res.status(500).json({ success: false, message: 'Error retrieving user' });
-        res.json({ success: true, token, user: row });
+    const sanitized = email.trim().toLowerCase();
+    
+    // Hash password
+    const hash = await new Promise((resolve, reject) => {
+      bcrypt.hash(password, 10, (err, hash) => {
+        if (err) reject(err);
+        else resolve(hash);
       });
     });
-  });
+
+    // Prepare user data
+    const userData = {
+      nickname: nickname || null,
+      email: sanitized,
+      password_hash: hash,
+      path: path,
+      ai_personality: ai_personality,
+      anonymous_mode: anonymous_mode
+    };
+
+    // Insert user
+    const result = await dbAdapter.insert('users', userData);
+    const userId = result.row?.id || result.lastID;
+
+    // Generate token
+    const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
+
+    // Get user without password
+    const user = result.row || await dbAdapter.get('users', { id: userId });
+    const { password_hash, ...safeUser } = user;
+
+    res.json({ success: true, token, user: safeUser });
+  } catch (error) {
+    console.error('Registration error:', error);
+    if (error.code === '23505' || error.message?.includes('UNIQUE') || error.message?.includes('duplicate')) {
+      return res.status(400).json({ success: false, message: 'Email already used' });
+    }
+    return res.status(500).json({ success: false, message: 'Registration failed: ' + error.message });
+  }
 });
 
 /* Login */
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password required' });
+    }
 
-  const sanitized = email.trim().toLowerCase();
-  db.get('SELECT * FROM users WHERE email = ?', [sanitized], (err, user) => {
-    if (err) return res.status(500).json({ success: false, message: 'DB error' });
-    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    const sanitized = email.trim().toLowerCase();
+    const user = await dbAdapter.get('users', { email: sanitized });
 
-    bcrypt.compare(password, user.password_hash, (cmpErr, match) => {
-      if (cmpErr || !match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
-      const { password_hash, ...safeUser } = user;
-      res.json({ success: true, token, user: safeUser });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Compare password
+    const match = await new Promise((resolve, reject) => {
+      bcrypt.compare(password, user.password_hash, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
     });
-  });
+
+    if (!match) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
+    const { password_hash, ...safeUser } = user;
+    res.json({ success: true, token, user: safeUser });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ success: false, message: 'Login failed: ' + error.message });
+  }
 });
 
 /* token verification helper exported for other routes */
@@ -64,16 +105,18 @@ const verifyToken = (req, res, next) => {
 };
 
 /* Get current user profile (for token verification) */
-router.get('/profile', verifyToken, (req, res) => {
-  db.get(
-    'SELECT id, nickname, email, path, ai_personality, mood_score, anonymous_mode, offline_mode, store_chat, total_points, level, created_at FROM users WHERE id = ?',
-    [req.userId],
-    (err, user) => {
-      if (err) return res.status(500).json({ success: false, message: 'DB error' });
-      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-      res.json({ success: true, user });
+router.get('/profile', verifyToken, async (req, res) => {
+  try {
+    const user = await dbAdapter.get('users', { id: req.userId });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-  );
+    const { password_hash, ...safeUser } = user;
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    console.error('Profile error:', error);
+    return res.status(500).json({ success: false, message: 'Error retrieving profile: ' + error.message });
+  }
 });
 
 /* Verify token endpoint */

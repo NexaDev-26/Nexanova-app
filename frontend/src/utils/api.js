@@ -8,16 +8,20 @@ import axios from "axios";
 // Detect environment (local dev vs production)
 // In production, use REACT_APP_API_BASE_URL from environment variables
 // This should be set to your Render backend URL (e.g., https://your-app.onrender.com/api)
+// IMPORTANT: The URL MUST end with /api
 const BASE_URL =
   process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_BASE_URL || "https://nexanova-backend.onrender.com/api"
+    ? (process.env.REACT_APP_API_BASE_URL || "https://neno-app.onrender.com/api")
     : "http://localhost:5000/api"; // Local development
 
-console.log("🔗 API BASE URL:", BASE_URL);
+// Ensure BASE_URL ends with /api
+const normalizedBaseUrl = BASE_URL.endsWith('/api') ? BASE_URL : BASE_URL + '/api';
+
+console.log("🔗 API BASE URL:", normalizedBaseUrl);
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: normalizedBaseUrl,
   withCredentials: true,
   timeout: 30000, // 30 second timeout
   headers: {
