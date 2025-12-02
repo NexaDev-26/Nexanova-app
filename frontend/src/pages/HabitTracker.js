@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../utils/api';
 import Navigation from '../components/Navigation';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { SkeletonCard } from '../components/SkeletonLoader';
 import HabitHeatmap from '../components/HabitHeatmap';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { soundEffects } from '../utils/soundEffects';
 import '../styles/HabitTracker.css';
 
 const HabitTracker = () => {
-  const { user } = useAuth();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('my-habits');
   const [habits, setHabits] = useState([]);
@@ -35,7 +33,6 @@ const HabitTracker = () => {
   });
   const [journalEntry, setJournalEntry] = useState({ habit_id: null, note: '', trigger: '', mood: 5 });
   const [stats, setStats] = useState({});
-  const [calendarView, setCalendarView] = useState(new Date());
   const [aiInsight, setAiInsight] = useState('');
 
   // Define all functions first before using them
@@ -297,7 +294,7 @@ const HabitTracker = () => {
     setAiInsight(insights[Math.floor(Math.random() * insights.length)]);
   };
 
-  const useTemplate = (template) => {
+  const applyTemplate = (template) => {
     setNewHabit({
       ...newHabit,
       title: template.title,
@@ -634,7 +631,7 @@ const HabitTracker = () => {
                     </div>
                     <button
                       className="btn btn-primary btn-small"
-                      onClick={() => useTemplate(template)}
+                      onClick={() => applyTemplate(template)}
                     >
                       Use This Template
                     </button>
