@@ -65,13 +65,22 @@ const dbAdapter = {
       });
       
       const { data, error } = await query.single();
-      if (error) throw error;
+      
+      // Supabase returns error when no rows found, but we want to return null
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned
+          return null;
+        }
+        throw error;
+      }
       return data;
     } else {
       const whereClause = Object.keys(conditions).map(key => `${key} = ?`).join(' AND ');
       const values = Object.values(conditions);
       const sql = `SELECT * FROM ${table} WHERE ${whereClause} LIMIT 1`;
-      return await dbGet(sql, values);
+      const result = await dbGet(sql, values);
+      return result || null;
     }
   },
 
