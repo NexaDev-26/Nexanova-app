@@ -29,13 +29,42 @@ const PORT = process.env.PORT || 5000;
 // ═══════════════════════════════════════════════════════════════════════════
 // CORS CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
+// CORS configuration - allows Vercel deployments and localhost
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        process.env.FRONTEND_URL || 'https://nexanovaa.vercel.app',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      const allowedOrigins = [
+        'https://nenoapp-eight.vercel.app',
+        'https://nexanovaa.vercel.app',
         'https://nexanova.vercel.app'
-      ]
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+      ];
+      
+      // Add custom frontend URL from environment variable
+      if (process.env.FRONTEND_URL) {
+        allowedOrigins.push(process.env.FRONTEND_URL);
+      }
+      
+      // Allow all Vercel preview deployments
+      if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error('Not allowed by CORS'));
+      }
+    } else {
+      // Development: allow localhost
+      const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

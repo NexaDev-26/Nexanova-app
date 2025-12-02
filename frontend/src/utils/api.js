@@ -6,9 +6,11 @@ import axios from "axios";
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Detect environment (local dev vs production)
+// In production, use REACT_APP_API_BASE_URL from environment variables
+// This should be set to your Render backend URL (e.g., https://your-app.onrender.com/api)
 const BASE_URL =
   process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_BASE_URL || "/api" // Use relative URL in production
+    ? process.env.REACT_APP_API_BASE_URL || "https://nexanova-backend.onrender.com/api"
     : "http://localhost:5000/api"; // Local development
 
 console.log("🔗 API BASE URL:", BASE_URL);
