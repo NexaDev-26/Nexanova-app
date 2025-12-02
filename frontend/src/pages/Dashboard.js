@@ -193,7 +193,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Wysa Icon Style */}
         <div className="quick-actions">
           <button
             className="action-btn reflect"
@@ -202,7 +202,7 @@ const Dashboard = () => {
             aria-label="Go to Journal to reflect"
             tabIndex={0}
           >
-            <span className="action-icon">📔</span>
+            <div className="action-icon">📔</div>
             <span>Reflect</span>
           </button>
           <button
@@ -212,7 +212,7 @@ const Dashboard = () => {
             aria-label="Go to Habits to grow"
             tabIndex={0}
           >
-            <span className="action-icon">🌱</span>
+            <div className="action-icon">🌱</div>
             <span>Grow</span>
           </button>
           <button
@@ -222,7 +222,7 @@ const Dashboard = () => {
             aria-label="Go to AI Chat to heal"
             tabIndex={0}
           >
-            <span className="action-icon">💚</span>
+            <div className="action-icon">💚</div>
             <span>Heal</span>
           </button>
         </div>
@@ -237,17 +237,17 @@ const Dashboard = () => {
             <ProgressRing
               value={progress.mind}
               label={t('dashboard.progress.mindBalance')}
-              color="#14b8a6"
+              color="#E86C4F"
             />
             <ProgressRing
               value={progress.habit}
               label={t('dashboard.progress.habitConsistency')}
-              color="#10b981"
+              color="#D4E157"
             />
             <ProgressRing
               value={progress.finance}
               label={t('dashboard.progress.financialStability')}
-              color="#f59e0b"
+              color="#4CAF50"
             />
           </div>
         </div>

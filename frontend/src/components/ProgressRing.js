@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProgressRing = ({ value, label, color = '#14b8a6' }) => {
+const ProgressRing = ({ value, label, color = '#E86C4F' }) => {
   const radius = 75;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;

@@ -63,5 +63,23 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+/* Get current user profile (for token verification) */
+router.get('/profile', verifyToken, (req, res) => {
+  db.get(
+    'SELECT id, nickname, email, path, ai_personality, mood_score, anonymous_mode, offline_mode, store_chat, total_points, level, created_at FROM users WHERE id = ?',
+    [req.userId],
+    (err, user) => {
+      if (err) return res.status(500).json({ success: false, message: 'DB error' });
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+      res.json({ success: true, user });
+    }
+  );
+});
+
+/* Verify token endpoint */
+router.get('/verify', verifyToken, (req, res) => {
+  res.json({ success: true, userId: req.userId });
+});
+
 module.exports = router;
 module.exports.verifyToken = verifyToken;

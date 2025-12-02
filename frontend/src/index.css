@@ -1,3 +1,9 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   NEXANOVA - WYSA EXACT THEME
+   Based on actual Wysa website screenshots
+   https://www.wysa.com/
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* -------------------------- Global Resets -------------------------- */
 * {
   margin: 0;
@@ -8,84 +14,134 @@
 
 /* -------------------------- Root Variables -------------------------- */
 :root {
-  /* Primary Colors */
-  --nexa-blue: #3A7BFF;
-  --nova-purple: #8A5CFF;
+  /* ═══ PRIMARY - Wysa Coral/Orange ═══ */
+  --primary: #E86C4F;
+  --primary-light: #F08D75;
+  --primary-dark: #D45A3D;
+  --primary-rgb: 232, 108, 79;
+  
+  /* ═══ SECONDARY - Wysa Lime Green ═══ */
+  --lime: #D4E157;
+  --lime-light: #E6F24D;
+  --lime-dark: #C0CA33;
+  --lime-rgb: 212, 225, 87;
+  
+  /* ═══ SUCCESS ═══ */
+  --green: #4CAF50;
+  --green-dark: #388E3C;
+  --green-light: #66BB6A;
+  
+  /* ═══ OTHER ACCENTS ═══ */
+  --teal: #26A69A;
+  --teal-dark: #00897B;
+  --purple: #7E57C2;
+  --blue: #42A5F5;
+  --red: #EF5350;
+  
+  /* ═══ LEGACY MAPPINGS ═══ */
+  --coral: #E86C4F;
+  --coral-light: #F08D75;
+  --coral-dark: #D45A3D;
+  --nexa-blue: #E86C4F;
+  --nova-purple: #D4E157;
+  --gold: #D4E157;
+  --gold-light: #E6F24D;
 
-  /* Secondary Colors */
-  --sky-aqua: #56E0E0;
-  --sunrise-gold: #FFB84C;
-  --calm-green: #4CD4A9;
-
-  /* Legacy Colors */
-  --teal: #14b8a6;
-  --teal-dark: #0d9488;
-  --green: #10b981;
-  --green-dark: #059669;
-  --gold: #f59e0b;
-  --gold-light: #fbbf24;
-  --red: #ef4444;
-  --purple: #8b5cf6;
-  --pink: #ec4899;
-  --cyan: #06b6d4;
-
-  /* Background & Text */
-  --bg: #F5F7FA;
+  /* ═══ BACKGROUNDS - Wysa Cream/Beige ═══ */
+  --bg: #FDF8F4;
+  --bg-secondary: #F5EDE6;
   --bg-card: #FFFFFF;
-  --text: #2E323F;
-  --text-light: #6b7280;
-  --border: #e5e7eb;
-
-  /* Shadows */
-  --shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-  --shadow-soft: 0 2px 8px rgba(58,123,255,0.15);
-  --shadow-glow: 0 0 20px rgba(58,123,255,0.3);
+  --bg-warm: #FAF5F0;
+  --bg-beige: #F5EDE6;
+  --bg-hover: #F0E8E0;
+  
+  /* ═══ TEXT ═══ */
+  --text: #2D2D2D;
+  --text-light: #6B6B6B;
+  --text-muted: #9E9E9E;
+  
+  /* ═══ BORDERS ═══ */
+  --border: #E8E0D8;
+  --border-light: #F0E8E0;
+  
+  /* ═══ SHADOWS - Soft & Warm ═══ */
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --shadow-soft: 0 4px 16px rgba(232, 108, 79, 0.15);
+  --shadow-glow: 0 0 24px rgba(232, 108, 79, 0.2);
+  --shadow-lime: 0 4px 16px rgba(212, 225, 87, 0.3);
+  
+  /* ═══ SOLID COLORS (no gradients) ═══ */
+  --gradient-primary: var(--primary);
+  --gradient-lime: var(--lime);
+  --gradient-cream: var(--bg);
+  --gradient-soft: var(--bg-secondary);
+  --gradient-warm: var(--bg);
+  
+  /* ═══ BORDER RADIUS - Rounded Wysa Style ═══ */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
 }
 
 /* -------------------------- Dark Mode -------------------------- */
 [data-theme="dark"] {
-  --bg: #0C0C14;
-  --bg-card: #1A1A2E;
-  --text: #F5F7FA;
-  --text-light: #9CA3AF;
-  --border: #2D3748;
-  --shadow: 0 1px 3px 0 rgba(0,0,0,0.5), 0 1px 2px 0 rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.4);
-  --shadow-soft: 0 2px 8px rgba(58,123,255,0.25);
-  --shadow-glow: 0 0 20px rgba(58,123,255,0.4);
+  --bg: #2D2D2D;
+  --bg-secondary: #3D3D3D;
+  --bg-card: #3D3D3D;
+  --bg-warm: #353535;
+  --bg-beige: #454545;
+  --bg-hover: #4D4D4D;
+  --text: #F5F5F5;
+  --text-light: #BDBDBD;
+  --text-muted: #9E9E9E;
+  --border: #4D4D4D;
+  --border-light: #5D5D5D;
+  
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* -------------------------- Fonts -------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+/* -------------------------- Fonts - Clean Sans Serif -------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
+    'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.6;
+  font-weight: 400;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-/* -------------------------- Links & Buttons -------------------------- */
+/* -------------------------- Links -------------------------- */
 a {
   text-decoration: none;
-  color: inherit;
+  color: var(--primary);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-dark);
 }
 
 button {
@@ -93,6 +149,7 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
+  font-weight: 500;
 }
 
 /* -------------------------- Inputs & Forms -------------------------- */
@@ -102,36 +159,114 @@ input, textarea, select {
   background: var(--bg-card);
   color: var(--text);
   border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(232, 108, 79, 0.1);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* -------------------------- Scrollbar -------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* -------------------------- Selection -------------------------- */
+::selection {
+  background: rgba(232, 108, 79, 0.2);
+  color: var(--text);
 }
 
 /* -------------------------- Animations -------------------------- */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
 .fade-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
 }
 
 /* -------------------------- Responsive -------------------------- */
 @media (max-width: 768px) {
-  html { font-size: 14px; }
+  html { font-size: 15px; }
   button, a, input, select { min-height: 48px; }
 }
 
 @media (max-width: 480px) {
-  html { font-size: 13px; }
+  html { font-size: 14px; }
 }
 
 /* -------------------------- Touch-friendly -------------------------- */
 button, a, input, select {
   min-height: 44px;
-  min-width: 44px;
+}
+
+/* -------------------------- Utility Classes -------------------------- */
+.text-primary { color: var(--primary); }
+.text-lime { color: var(--lime-dark); }
+.text-success { color: var(--green); }
+.text-muted { color: var(--text-light); }
+
+.bg-primary { background-color: var(--primary); }
+.bg-lime { background-color: var(--lime); }
+.bg-cream { background-color: var(--bg); }
+.bg-beige { background-color: var(--bg-beige); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAIN ICONS (no background shapes)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.icon-circle {
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.icon-circle-sm {
+  font-size: 1.5rem;
+}
+
+.icon-circle-lg {
+  font-size: 2.5rem;
 }

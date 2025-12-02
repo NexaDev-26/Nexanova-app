@@ -38,7 +38,7 @@ const FinanceTracker = () => {
     recurring: false
   });
   const [newBudget, setNewBudget] = useState({ amount: '', period: 'month' });
-  const [newGoal, setNewGoal] = useState({ target: '', deadline: '' });
+  const [newGoal, setNewGoal] = useState({ title: '', description: '', target: '', deadline: '' });
   const [activeTab, setActiveTab] = useState('overview');
   const [sideHustleCapital, setSideHustleCapital] = useState('');
   const [sideHustleLocation, setSideHustleLocation] = useState('');
@@ -165,8 +165,10 @@ const FinanceTracker = () => {
   };
 
   const handleSetGoal = () => {
-    if (!newGoal.target) return;
+    if (!newGoal.target || !newGoal.title) return;
     const goal = {
+      title: newGoal.title,
+      description: newGoal.description || '',
       target: parseFloat(newGoal.target),
       current: savingsGoal.current || 0,
       deadline: newGoal.deadline || null
@@ -174,7 +176,7 @@ const FinanceTracker = () => {
     setSavingsGoal(goal);
     localStorage.setItem('savingsGoal', JSON.stringify(goal));
     setShowGoalForm(false);
-    setNewGoal({ target: '', deadline: '' });
+    setNewGoal({ title: '', description: '', target: '', deadline: '' });
     showToast('Savings goal set successfully!', 'success');
   };
 
@@ -915,7 +917,10 @@ const FinanceTracker = () => {
                 <div className="card goal-card-large">
                   <div className="goal-header">
                     <div>
-                      <h3>Savings Goal</h3>
+                      <h3>{savingsGoal.title || 'Savings Goal'}</h3>
+                      {savingsGoal.description && (
+                        <p className="goal-description">{savingsGoal.description}</p>
+                      )}
                       <p className="goal-target">Target: {savingsGoal.target.toLocaleString()} TZS</p>
                     </div>
                     <button className="btn-icon" onClick={() => setShowGoalForm(true)}>
@@ -945,7 +950,27 @@ const FinanceTracker = () => {
               <div className="card goal-form">
                 <h3>{savingsGoal.target ? 'Update Goal' : 'Create Goal'}</h3>
                 <div className="form-group">
-                  <label>Target Amount (TZS)</label>
+                  <label>Goal Title *</label>
+                  <input
+                    type="text"
+                    value={newGoal.title}
+                    onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                    className="input-field"
+                    placeholder="e.g., Emergency Fund, New Phone, School Fees"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Description (optional)</label>
+                  <textarea
+                    value={newGoal.description}
+                    onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
+                    className="input-field"
+                    placeholder="Describe what this goal is for..."
+                    rows={3}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Target Amount (TZS) *</label>
                   <input
                     type="number"
                     value={newGoal.target}
@@ -968,7 +993,7 @@ const FinanceTracker = () => {
                     className="btn btn-secondary"
                     onClick={() => {
                       setShowGoalForm(false);
-                      setNewGoal({ target: '', deadline: '' });
+                      setNewGoal({ title: '', description: '', target: '', deadline: '' });
                     }}
                   >
                     Cancel
@@ -976,7 +1001,7 @@ const FinanceTracker = () => {
                   <button
                     className="btn btn-primary"
                     onClick={handleSetGoal}
-                    disabled={!newGoal.target}
+                    disabled={!newGoal.target || !newGoal.title}
                   >
                     {savingsGoal.target ? 'Update' : 'Create'} Goal
                   </button>

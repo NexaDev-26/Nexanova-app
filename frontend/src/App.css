@@ -1,27 +1,17 @@
-:root {
-  --bg: #f5f7fb;
-  --Primary: #1976d2;
-  --text: #222;
-  --text-light: #777;
-  --gold: #ffd700;
-  --gold-light: #ffda6a;
-  --nexa-blue: #3a7bff;
-  --nova-purple: #9b59b6;
-  --bg-card: #fff;
-  --border: #e0e0e0;
-  --shadow-soft: 0 2px 6px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 20px rgba(0,0,0,0.15);
-  --shadow-glow: 0 4px 15px rgba(58,123,255,0.3);
-  --teal: #1abc9c;
-}
+/* ══════════════════════════════════════════════════════════════════════════
+   NEXANOVA APP - WYSA EXACT THEME
+   Based on actual Wysa website screenshots
+   - Coral/Orange primary buttons
+   - Lime green secondary buttons
+   - Cream/beige backgrounds
+   - Simple line icons in beige circles
+   ══════════════════════════════════════════════════════════════════════════ */
 
 /* Global */
 body, html, #root {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: Inter, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -35,46 +25,53 @@ body, html, #root {
 
 /* Header padding */
 .app-with-header {
-  padding-top: 60px; /* header height */
+  padding-top: 64px;
 }
 
-/* Offline Banner */
+/* ══════════════════════════════════════════════════════════════════════════
+   OFFLINE BANNER
+   ══════════════════════════════════════════════════════════════════════════ */
 .offline-banner {
-  background: var(--gold);
-  color: white;
-  padding: 0.75rem;
+  background: var(--lime);
+  color: var(--text);
+  padding: 0.75rem 1rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
   position: fixed;
-  top: 60px; /* below header */
+  top: 64px;
   left: 0;
   right: 0;
   z-index: 999;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-lime);
 }
 
 .App:has(.offline-banner) {
-  padding-top: 100px; /* header + banner */
+  padding-top: 110px;
 }
 
-/* Header */
+/* ══════════════════════════════════════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════════════════════════════════════ */
 .app-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 64px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow);
 }
 
-/* Bottom Navigation (mobile) */
+/* ══════════════════════════════════════════════════════════════════════════
+   BOTTOM NAVIGATION
+   ══════════════════════════════════════════════════════════════════════════ */
 .nav-tabs {
   position: fixed;
   bottom: 0;
@@ -84,11 +81,9 @@ body, html, #root {
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-around;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
   z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .nav-tab {
@@ -96,20 +91,27 @@ body, html, #root {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0.75rem;
   color: var(--text-light);
   font-size: 0.7rem;
+  font-weight: 500;
   border: none;
   background: none;
   cursor: pointer;
-  min-width: 60px;
+  min-width: 64px;
   flex-shrink: 0;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
+}
+
+.nav-tab:hover {
+  color: var(--primary);
+  background: rgba(232, 108, 79, 0.06);
 }
 
 .nav-tab.active {
-  color: var(--nexa-blue);
-  position: relative;
+  color: var(--primary);
+  background: rgba(232, 108, 79, 0.1);
 }
 
 .nav-tab.active::before {
@@ -118,25 +120,27 @@ body, html, #root {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
+  width: 32px;
   height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   border-radius: 0 0 3px 3px;
 }
 
 .nav-tab-icon {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  transition: transform 0.2s ease;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.nav-tab.active .nav-tab-icon {
+  transform: scale(1.05);
 }
 
-/* Buttons */
+/* ══════════════════════════════════════════════════════════════════════════
+   BUTTONS - Wysa Style
+   ══════════════════════════════════════════════════════════════════════════ */
 .btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 1rem;
   border: none;
@@ -145,93 +149,91 @@ body, html, #root {
   align-items: center;
   gap: 0.5rem;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
+/* Primary Button - Wysa Coral/Orange (from "Learn more" button) */
 .btn-primary {
-  background: linear-gradient(135deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   color: white;
   box-shadow: var(--shadow-soft);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
 }
 
 .btn-primary:hover {
+  background: var(--primary-dark);
   transform: translateY(-2px);
   box-shadow: var(--shadow-glow);
 }
 
-.btn-primary:hover::before {
-  left: 100%;
+.btn-primary:active {
+  transform: translateY(0);
 }
 
-.btn-secondary {
-  background: var(--bg-card);
+/* Secondary Button - Wysa Lime Green (from "Visit April Health" button) */
+.btn-secondary, .btn-lime {
+  background: var(--lime);
   color: var(--text);
-  border: 2px solid var(--border);
+  font-weight: 600;
+  box-shadow: var(--shadow-lime);
 }
 
-.btn-secondary:hover {
-  border-color: var(--nexa-blue);
-  color: var(--nexa-blue);
-  background: rgba(58,123,255,0.05);
-  transform: translateY(-1px);
+.btn-secondary:hover, .btn-lime:hover {
+  background: var(--lime-dark);
+  transform: translateY(-2px);
 }
 
-.btn-gold {
-  background: var(--gold);
+/* Outline Button */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary);
   color: white;
 }
 
-.btn-gold:hover {
-  background: var(--gold-light);
+/* Ghost Button */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-light);
 }
 
-/* Cards */
+.btn-ghost:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+}
+
+/* Gold Button (legacy - maps to lime) */
+.btn-gold {
+  background: var(--lime);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.btn-gold:hover {
+  background: var(--lime-dark);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARDS - Clean White on Cream
+   ══════════════════════════════════════════════════════════════════════════ */
 .card {
   background: var(--bg-card);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
   margin-bottom: 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(58,123,255,0.3);
-}
-
-.card:hover::before {
-  transform: scaleX(1);
 }
 
 .card-header {
@@ -245,9 +247,74 @@ body, html, #root {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Progress Rings */
+.card-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PLAIN ICONS (no background shapes)
+   ══════════════════════════════════════════════════════════════════════════ */
+.feature-icon {
+  font-size: 2.5rem;
+  margin: 0 auto 1rem;
+  color: var(--text);
+}
+
+.feature-icon svg,
+.feature-icon img {
+  width: 48px;
+  height: 48px;
+  color: var(--text);
+}
+
+.feature-icon-sm {
+  font-size: 2rem;
+}
+
+.feature-icon-sm svg,
+.feature-icon-sm img {
+  width: 32px;
+  height: 32px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BADGES & TAGS
+   ══════════════════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: rgba(232, 108, 79, 0.12);
+  color: var(--primary-dark);
+}
+
+.badge-lime {
+  background: rgba(212, 225, 87, 0.3);
+  color: var(--text);
+}
+
+.badge-success {
+  background: rgba(76, 175, 80, 0.12);
+  color: var(--green-dark);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROGRESS RINGS
+   ══════════════════════════════════════════════════════════════════════════ */
 .progress-ring {
   position: relative;
   width: 200px;
@@ -259,7 +326,7 @@ body, html, #root {
 }
 
 .progress-ring svg {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08));
 }
 
 .progress-ring-text {
@@ -279,29 +346,29 @@ body, html, #root {
 }
 
 .progress-ring-value {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
-  font-family: 'Poppins', sans-serif;
   line-height: 1.2;
-  margin-bottom: 0.25rem;
+  color: var(--primary);
 }
 
 .progress-ring-label {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
   text-align: center;
   line-height: 1.4;
   max-width: 150px;
   word-wrap: break-word;
-  padding: 0 0.5rem;
 }
 
-/* Container */
+/* ══════════════════════════════════════════════════════════════════════════
+   CONTAINER
+   ══════════════════════════════════════════════════════════════════════════ */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0.5rem 1rem 5rem 1rem;
+  padding: 1rem 1.25rem 6rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -310,11 +377,13 @@ body, html, #root {
 @media (max-width: 768px) {
   .container {
     max-width: 100%;
-    padding: 0.75rem;
+    padding: 1rem 1rem 5rem 1rem;
   }
 }
 
-/* Loading */
+/* ══════════════════════════════════════════════════════════════════════════
+   LOADING STATES
+   ══════════════════════════════════════════════════════════════════════════ */
 .loading {
   display: flex;
   flex-direction: column;
@@ -325,12 +394,12 @@ body, html, #root {
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border: 3px solid var(--border);
-  border-top-color: var(--teal);
+  border-top-color: var(--primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -338,14 +407,116 @@ body, html, #root {
   100% { transform: rotate(360deg); }
 }
 
-/* Empty State */
+.loading-text {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ══════════════════════════════════════════════════════════════════════════ */
 .empty-state {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 3rem 1.5rem;
   color: var(--text-light);
 }
 
 .empty-state-icon {
-  font-size: 3rem;
+  font-size: 4rem;
   margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state h3 {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+   ══════════════════════════════════════════════════════════════════════════ */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  background: var(--bg-card);
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(232, 108, 79, 0.1);
+}
+
+.form-input:hover:not(:focus) {
+  border-color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════════════════════════ */
+@keyframes slideUp {
+  from { 
+    transform: translateY(16px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Staggered animation for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WYSA HIGHLIGHT BOX (like "redefined" highlight)
+   ══════════════════════════════════════════════════════════════════════════ */
+.highlight-box {
+  display: inline-block;
+  background: var(--primary);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-weight: 700;
+}
+
+.highlight-text {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DIVIDERS
+   ══════════════════════════════════════════════════════════════════════════ */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.5rem 0;
 }

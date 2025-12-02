@@ -145,7 +145,7 @@
 }
 
 .calendar-day.intensity-1 {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--green) 100%);
+  background: var(--green);
   border-color: var(--teal);
   color: white;
 }
@@ -208,7 +208,7 @@
 }
 
 .legend-box.intensity-1 {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--green) 100%);
+  background: var(--green);
   border-color: var(--teal);
 }
 

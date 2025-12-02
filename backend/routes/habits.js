@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { verifyToken } = require('./auth');
+const { awardPoints } = require('./user');
 
 // Get all habits (optimized query - only select needed columns)
 router.get('/', verifyToken, (req, res) => {

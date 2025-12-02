@@ -1,69 +1,57 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   FLOATING AI CHAT BUTTON
+   Only visible when chat is closed
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .floating-ai-button {
   position: fixed;
   bottom: 5.5rem;
   right: 1rem;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   border: none;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xl);
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
   z-index: 999;
-  box-shadow: 0 4px 20px rgba(58, 123, 255, 0.4);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: float 3s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .floating-ai-button:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(58, 123, 255, 0.5);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
 
-.floating-ai-button.active {
-  background: linear-gradient(135deg, var(--nova-purple) 0%, var(--nexa-blue) 100%);
+.floating-ai-button:active {
   transform: scale(0.95);
 }
 
 .ai-button-icon {
   display: block;
-  transition: transform 0.3s;
 }
 
-.floating-ai-button.active .ai-button-icon {
-  display: none;
-}
-
-.ai-button-close {
-  display: none;
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.floating-ai-button.active .ai-button-close {
-  display: block;
-}
-
-@keyframes float {
+@keyframes pulse {
   0%, 100% {
-    transform: translateY(0);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   }
   50% {
-    transform: translateY(-10px);
+    box-shadow: 0 4px 24px rgba(232, 108, 79, 0.4);
   }
 }
 
 @media (max-width: 768px) {
   .floating-ai-button {
-    bottom: 4.5rem;
+    bottom: 5rem;
     right: 0.75rem;
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     font-size: 1.375rem;
   }
 }
-

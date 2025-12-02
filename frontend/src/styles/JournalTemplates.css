@@ -57,7 +57,7 @@
 }
 
 .category-btn.active {
-  background: linear-gradient(135deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   border-color: transparent;
   color: white;
   box-shadow: var(--shadow-soft);
@@ -90,7 +90,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -169,7 +169,7 @@
 }
 
 .btn-use-template {
-  background: linear-gradient(135deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   color: white;
   box-shadow: var(--shadow-soft);
 }

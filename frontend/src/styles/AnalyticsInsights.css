@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -61,7 +61,7 @@
 }
 
 .time-range-selector button.active {
-  background: linear-gradient(135deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   color: white;
   border-color: var(--nexa-blue);
   box-shadow: var(--shadow-soft);
@@ -75,7 +75,7 @@
 }
 
 .metric-card {
-  background: linear-gradient(135deg, rgba(58, 123, 255, 0.08) 0%, rgba(138, 92, 255, 0.08) 100%);
+  background: var(--bg-beige);
   border: 1px solid rgba(58, 123, 255, 0.2);
   border-radius: 12px;
   padding: 1.5rem;

@@ -68,7 +68,7 @@
 
 .tool-card.active {
   border-color: var(--tool-color);
-  background: linear-gradient(135deg, rgba(58, 123, 255, 0.05) 0%, rgba(138, 92, 255, 0.05) 100%);
+  background: var(--bg-beige);
 }
 
 .tool-card.active::before {

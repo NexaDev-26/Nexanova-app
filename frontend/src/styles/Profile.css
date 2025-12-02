@@ -5,23 +5,15 @@
 .profile-header {
   text-align: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+  background: var(--primary);
   color: white;
   border-radius: 1rem;
   margin-bottom: 2rem;
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
+  font-size: 4rem;
   margin: 0 auto 1rem;
-  font-weight: 700;
 }
 
 .profile-header h2 {

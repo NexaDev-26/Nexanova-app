@@ -94,7 +94,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   transform: scaleY(0);
   transform-origin: top;
   transition: transform 0.3s ease;

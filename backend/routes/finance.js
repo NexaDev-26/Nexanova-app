@@ -8,7 +8,7 @@ const { awardPoints } = require('./user');
 // Get all finance entries (optimized - limit to last 100 entries for performance)
 router.get('/', verifyToken, (req, res) => {
   db.all(
-    'SELECT id, user_id, type, category, amount, date, created_at FROM finance WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 100',
+    'SELECT id, user_id, type, category, amount, date, description, created_at FROM finance WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 100',
     [req.userId],
     (err, finance) => {
       if (err) {
@@ -47,15 +47,15 @@ router.get('/summary', verifyToken, cacheMiddleware({ ttl: 2 * 60 * 1000, prefix
 
 // Add finance entry
 router.post('/', verifyToken, (req, res) => {
-  const { type, category, amount, date } = req.body;
+  const { type, category, amount, date, description } = req.body;
 
   if (!type || !category || !amount || !date) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
   db.run(
-    'INSERT INTO finance (user_id, type, category, amount, date) VALUES (?, ?, ?, ?, ?)',
-    [req.userId, type, category, amount, date],
+    'INSERT INTO finance (user_id, type, category, amount, date, description) VALUES (?, ?, ?, ?, ?, ?)',
+    [req.userId, type, category, amount, date, description || null],
     function(err) {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error adding finance entry' });
@@ -111,6 +111,150 @@ router.delete('/:id', verifyToken, (req, res) => {
     res.json({ success: true });
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SAVINGS GOALS ENDPOINTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Get all savings goals
+router.get('/goals', verifyToken, (req, res) => {
+  db.all(
+    'SELECT * FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC',
+    [req.userId],
+    (err, goals) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error fetching goals' });
+      }
+      res.json({ success: true, goals: goals || [] });
+    }
+  );
+});
+
+// Create savings goal
+router.post('/goals', verifyToken, (req, res) => {
+  const { title, description, target_amount, deadline } = req.body;
+
+  if (!title || !target_amount) {
+    return res.status(400).json({ success: false, message: 'Title and target amount required' });
+  }
+
+  db.run(
+    'INSERT INTO savings_goals (user_id, title, description, target_amount, deadline) VALUES (?, ?, ?, ?, ?)',
+    [req.userId, title, description || null, target_amount, deadline || null],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error creating goal' });
+      }
+      res.json({ success: true, goal_id: this.lastID });
+    }
+  );
+});
+
+// Update savings goal
+router.patch('/goals/:id', verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { title, description, target_amount, current_amount, deadline, is_completed } = req.body;
+
+  const updates = [];
+  const params = [];
+
+  if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+  if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+  if (target_amount !== undefined) { updates.push('target_amount = ?'); params.push(target_amount); }
+  if (current_amount !== undefined) { updates.push('current_amount = ?'); params.push(current_amount); }
+  if (deadline !== undefined) { updates.push('deadline = ?'); params.push(deadline); }
+  if (is_completed !== undefined) { updates.push('is_completed = ?'); params.push(is_completed ? 1 : 0); }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ success: false, message: 'No fields to update' });
+  }
+
+  updates.push('updated_at = CURRENT_TIMESTAMP');
+  params.push(id, req.userId);
+
+  db.run(
+    `UPDATE savings_goals SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+    function(err) {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error updating goal' });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ success: false, message: 'Goal not found' });
+      }
+      res.json({ success: true });
+    }
+  );
+});
+
+// Delete savings goal
+router.delete('/goals/:id', verifyToken, (req, res) => {
+  const { id } = req.params;
+
+  db.run('DELETE FROM savings_goals WHERE id = ? AND user_id = ?', [id, req.userId], function(err) {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error deleting goal' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
+    }
+    res.json({ success: true });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUDGET ENDPOINTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Get active budget
+router.get('/budget', verifyToken, (req, res) => {
+  db.get(
+    'SELECT * FROM budgets WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1',
+    [req.userId],
+    (err, budget) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error fetching budget' });
+      }
+      res.json({ success: true, budget: budget || null });
+    }
+  );
+});
+
+// Set/Update budget
+router.post('/budget', verifyToken, (req, res) => {
+  const { amount, period } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ success: false, message: 'Valid budget amount required' });
+  }
+
+  const validPeriods = ['daily', 'weekly', 'monthly', 'yearly'];
+  const budgetPeriod = validPeriods.includes(period) ? period : 'monthly';
+  const startDate = new Date().toISOString().split('T')[0];
+
+  // Deactivate existing budgets
+  db.run('UPDATE budgets SET is_active = 0 WHERE user_id = ?', [req.userId], (err) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error updating budgets' });
+    }
+
+    // Create new budget
+    db.run(
+      'INSERT INTO budgets (user_id, amount, period, start_date) VALUES (?, ?, ?, ?)',
+      [req.userId, amount, budgetPeriod, startDate],
+      function(err) {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Error creating budget' });
+        }
+        res.json({ success: true, budget_id: this.lastID });
+      }
+    );
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIDE HUSTLE SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
 
 // Get side hustle suggestions
 router.post('/side-hustle', verifyToken, (req, res) => {

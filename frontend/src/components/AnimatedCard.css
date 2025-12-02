@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -41,7 +41,7 @@
 }
 
 .animated-card-gradient {
-  background: linear-gradient(135deg, rgba(58, 123, 255, 0.05) 0%, rgba(138, 92, 255, 0.05) 100%);
+  background: var(--bg-beige);
   border-color: rgba(58, 123, 255, 0.2);
 }
 

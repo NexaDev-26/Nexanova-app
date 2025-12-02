@@ -13,8 +13,8 @@ const FloatingAIChat = () => {
     return null;
   }
 
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
+  const handleOpen = () => {
+    setIsOpen(true);
   };
 
   const handleClose = () => {
@@ -23,16 +23,19 @@ const FloatingAIChat = () => {
 
   return (
     <>
-      <button
-        className={`floating-ai-button ${isOpen ? 'active' : ''}`}
-        onClick={handleToggle}
-        aria-label="Open AI Chat"
-        title="Chat with NeNo"
-      >
-        <span className="ai-button-icon">💬</span>
-        {isOpen && <span className="ai-button-close">✕</span>}
-      </button>
+      {/* Only show floating button when chat is CLOSED */}
+      {!isOpen && (
+        <button
+          className="floating-ai-button"
+          onClick={handleOpen}
+          aria-label="Open AI Chat"
+          title="Chat with NeNo"
+        >
+          <span className="ai-button-icon">💬</span>
+        </button>
+      )}
       
+      {/* Full screen chat popup */}
       {isOpen && (
         <AIChatPopup onClose={handleClose} />
       )}
@@ -41,4 +44,3 @@ const FloatingAIChat = () => {
 };
 
 export default FloatingAIChat;
-

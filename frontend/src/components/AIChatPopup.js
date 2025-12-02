@@ -18,7 +18,6 @@ const AIChatPopup = ({ onClose }) => {
   const [showTools, setShowTools] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
   const messagesEndRef = useRef(null);
-  const popupRef = useRef(null);
 
   useEffect(() => {
     loadChatHistory();
@@ -28,20 +27,18 @@ const AIChatPopup = ({ onClose }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Close on outside click
+  // Handle back button on mobile devices
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        // Don't close if clicking the floating button
-        if (!event.target.closest('.floating-ai-button')) {
-          onClose();
-        }
-      }
+    const handleBackButton = (event) => {
+      event.preventDefault();
+      onClose();
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handleBackButton);
+    
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('popstate', handleBackButton);
     };
   }, [onClose]);
 
@@ -161,7 +158,7 @@ const AIChatPopup = ({ onClose }) => {
 
   return (
     <div className="ai-chat-popup-overlay">
-      <div className="ai-chat-popup" ref={popupRef}>
+      <div className="ai-chat-popup">
         <div className="popup-header">
           <div className="popup-header-content">
             <h3>💬 Chat with NeNo</h3>
@@ -189,9 +186,9 @@ const AIChatPopup = ({ onClose }) => {
               <button
                 className="popup-close-btn"
                 onClick={onClose}
-                title="Close"
+                title="Back to app"
               >
-                ✕
+                Back
               </button>
             </div>
           </div>

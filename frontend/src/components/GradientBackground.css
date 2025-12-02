@@ -6,45 +6,27 @@
   overflow: hidden;
 }
 
+/* Plain solid colors - no gradients */
 .gradient-primary {
-  background: linear-gradient(135deg, #3A7BFF 0%, #8A5CFF 100%);
+  background: var(--primary);
 }
 
 .gradient-secondary {
-  background: linear-gradient(135deg, #56E0E0 0%, #4CD4A9 100%);
+  background: var(--lime);
 }
 
 .gradient-sunset {
-  background: linear-gradient(135deg, #FFB84C 0%, #FF8C42 100%);
+  background: #FFB84C;
 }
 
 .gradient-calm {
-  background: linear-gradient(135deg, #4CD4A9 0%, #10b981 100%);
+  background: var(--green);
 }
 
 .gradient-energy {
-  background: linear-gradient(135deg, #3A7BFF 0%, #56E0E0 100%);
+  background: var(--primary);
 }
 
 .gradient-dream {
-  background: linear-gradient(135deg, #8A5CFF 0%, #FFB84C 100%);
+  background: var(--lime);
 }
-
-/* Animated gradient overlay */
-.gradient-background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 0, 0, 0.05) 100%
-  );
-  pointer-events: none;
-  border-radius: 12px;
-}
-

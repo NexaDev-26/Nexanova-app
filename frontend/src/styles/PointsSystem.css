@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--nexa-blue), var(--nova-purple));
+  background: var(--primary);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -50,7 +50,7 @@
 }
 
 .level-badge {
-  background: linear-gradient(135deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   color: white;
   border-radius: 12px;
   padding: 1rem 1.5rem;
@@ -105,7 +105,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--nexa-blue) 0%, var(--nova-purple) 100%);
+  background: var(--primary);
   border-radius: 4px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
