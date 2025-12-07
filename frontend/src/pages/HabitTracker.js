@@ -127,27 +127,26 @@ const HabitTracker = () => {
   }, []);
 
   useEffect(() => {
-    // Reload habits when switching to archived tab
-    if (activeTab === 'archived') {
-      loadHabits(true).then(loadedHabits => {
-        const completionMap = {};
-        Promise.all(
-          loadedHabits.map(async (habit) => {
-            try {
-              const response = await api.get(`/habits/${habit.id}/completions`);
-              if (response.data.success) {
-                completionMap[habit.id] = response.data.completions || [];
-              }
-            } catch (error) {
-              console.error(`Error loading completions for habit ${habit.id}:`, error);
+    // Reload habits when switching tabs (both to and from archived)
+    const isArchived = activeTab === 'archived';
+    loadHabits(isArchived).then(loadedHabits => {
+      const completionMap = {};
+      Promise.all(
+        loadedHabits.map(async (habit) => {
+          try {
+            const response = await api.get(`/habits/${habit.id}/completions`);
+            if (response.data.success) {
+              completionMap[habit.id] = response.data.completions || [];
             }
-          })
-        ).then(() => {
-          setCompletions(completionMap);
-          loadStats(loadedHabits, completionMap);
-        });
+          } catch (error) {
+            console.error(`Error loading completions for habit ${habit.id}:`, error);
+          }
+        })
+      ).then(() => {
+        setCompletions(completionMap);
+        loadStats(loadedHabits, completionMap);
       });
-    }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 

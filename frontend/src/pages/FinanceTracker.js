@@ -84,78 +84,224 @@ const FinanceTracker = () => {
     const today = new Date().toISOString().split('T')[0];
     const updatedProgress = { ...challengeProgress };
 
-    // Update no-impulse challenge
+    // Helper function to get last successful date for a challenge
+    const getLastSuccessfulDate = (challengeId) => {
+      const progress = updatedProgress[challengeId];
+      if (!progress) return null;
+      return progress.lastSuccessfulDate || progress.startDate;
+    };
+
+    // Helper function to check if today was already counted
+    const isTodayCounted = (challengeId) => {
+      const progress = updatedProgress[challengeId];
+      if (!progress) return false;
+      return progress.lastCountedDate === today;
+    };
+
+    // Update no-impulse challenge - track consecutive days without impulse purchases
     if (activeChallenges.includes('no-impulse') && updatedProgress['no-impulse']) {
-      const startDate = new Date(updatedProgress['no-impulse'].startDate);
-      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
-      updatedProgress['no-impulse'] = {
-        ...updatedProgress['no-impulse'],
-        days: Math.min(daysSinceStart + 1, 7)
-      };
+      const progress = updatedProgress['no-impulse'];
+      const lastSuccessfulDate = getLastSuccessfulDate('no-impulse');
+      const lastDate = new Date(lastSuccessfulDate);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
+      // Check if user made any impulse purchases today (expenses without description or in impulse categories)
+      const impulseCategories = ['Shopping', 'Entertainment', 'Other'];
+      const todayImpulsePurchases = transactions.filter(t => 
+        t.type === 'expense' && 
+        t.date === today && 
+        (impulseCategories.includes(t.category) || !t.description || t.description.toLowerCase().includes('impulse'))
+      ).length;
+      
+      if (todayImpulsePurchases === 0 && !isTodayCounted('no-impulse')) {
+        // Success: no impulse purchases today
+        if (daysDiff === 0) {
+          // Same day - increment if not already counted
+          updatedProgress['no-impulse'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 7),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else if (daysDiff === 1) {
+          // Consecutive day - increment
+          updatedProgress['no-impulse'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 7),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else {
+          // Gap in days - reset streak
+          updatedProgress['no-impulse'] = {
+            ...progress,
+            days: 1,
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        }
+      } else if (todayImpulsePurchases > 0) {
+        // Failed: impulse purchase detected - reset streak
+        updatedProgress['no-impulse'] = {
+          ...progress,
+          days: 0,
+          lastSuccessfulDate: progress.lastSuccessfulDate || progress.startDate,
+          lastCountedDate: today
+        };
+      }
+      // If already counted today, don't update
     }
 
-    // Update save-500 challenge
+    // Update save-500 challenge - track consecutive days with 500+ TZS saved
     if (activeChallenges.includes('save-500') && updatedProgress['save-500']) {
-      const startDate = new Date(updatedProgress['save-500'].startDate);
-      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      const progress = updatedProgress['save-500'];
+      const lastSuccessfulDate = getLastSuccessfulDate('save-500');
+      const lastDate = new Date(lastSuccessfulDate);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
       // Check if user saved 500 TZS today
       const todaySavings = transactions
         .filter(t => t.type === 'income' && t.date === today && t.amount >= 500)
         .reduce((sum, t) => sum + t.amount, 0);
       
-      if (todaySavings >= 500) {
-        updatedProgress['save-500'] = {
-          ...updatedProgress['save-500'],
-          days: Math.min((updatedProgress['save-500'].days || 0) + 1, 30)
-        };
-      } else {
-        updatedProgress['save-500'] = {
-          ...updatedProgress['save-500'],
-          days: Math.min(daysSinceStart + 1, 30)
-        };
+      if (todaySavings >= 500 && !isTodayCounted('save-500')) {
+        // Success: saved 500+ TZS today
+        if (daysDiff === 0) {
+          // Same day - increment if not already counted
+          updatedProgress['save-500'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 30),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else if (daysDiff === 1) {
+          // Consecutive day - increment
+          updatedProgress['save-500'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 30),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else {
+          // Gap in days - reset streak
+          updatedProgress['save-500'] = {
+            ...progress,
+            days: 1,
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        }
+      } else if (todaySavings < 500 && daysDiff > 0) {
+        // Failed: didn't save 500 TZS today - reset streak (but preserve current count if not yet failed)
+        // Only reset if we've moved to a new day
+        if (daysDiff >= 1) {
+          updatedProgress['save-500'] = {
+            ...progress,
+            days: 0, // Reset to 0 on failure
+            lastSuccessfulDate: progress.lastSuccessfulDate || progress.startDate,
+            lastCountedDate: today
+          };
+        }
       }
+      // If already counted today, don't update
     }
 
-    // Update no-eating-out challenge
+    // Update no-eating-out challenge - track consecutive days without eating out
     if (activeChallenges.includes('no-eating-out') && updatedProgress['no-eating-out']) {
-      const startDate = new Date(updatedProgress['no-eating-out'].startDate);
-      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      const progress = updatedProgress['no-eating-out'];
+      const lastSuccessfulDate = getLastSuccessfulDate('no-eating-out');
+      const lastDate = new Date(lastSuccessfulDate);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
       // Check if user logged any "Food & Dining" expenses today
       const todayFoodExpenses = transactions
         .filter(t => t.type === 'expense' && t.date === today && 
           (t.category === 'Food & Dining' || t.category === 'Restaurants'))
         .length;
       
-      if (todayFoodExpenses === 0) {
+      if (todayFoodExpenses === 0 && !isTodayCounted('no-eating-out')) {
+        // Success: no eating out today
+        if (daysDiff === 0) {
+          updatedProgress['no-eating-out'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 14),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else if (daysDiff === 1) {
+          updatedProgress['no-eating-out'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 14),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else {
+          updatedProgress['no-eating-out'] = {
+            ...progress,
+            days: 1,
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        }
+      } else if (todayFoodExpenses > 0) {
+        // Failed: ate out today - reset streak
         updatedProgress['no-eating-out'] = {
-          ...updatedProgress['no-eating-out'],
-          days: Math.min((updatedProgress['no-eating-out'].days || 0) + 1, 14)
-        };
-      } else {
-        updatedProgress['no-eating-out'] = {
-          ...updatedProgress['no-eating-out'],
-          days: Math.min(daysSinceStart + 1, 14)
+          ...progress,
+          days: 0,
+          lastSuccessfulDate: progress.lastSuccessfulDate || progress.startDate,
+          lastCountedDate: today
         };
       }
     }
 
-    // Update track-expenses challenge
+    // Update track-expenses challenge - track consecutive days with expense logging
     if (activeChallenges.includes('track-expenses') && updatedProgress['track-expenses']) {
-      const startDate = new Date(updatedProgress['track-expenses'].startDate);
-      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      const progress = updatedProgress['track-expenses'];
+      const lastSuccessfulDate = getLastSuccessfulDate('track-expenses');
+      const lastDate = new Date(lastSuccessfulDate);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
       // Check if user logged any expenses today
       const todayExpenses = transactions.filter(t => t.date === today && t.type === 'expense').length;
       
-      if (todayExpenses > 0) {
-        updatedProgress['track-expenses'] = {
-          ...updatedProgress['track-expenses'],
-          days: Math.min((updatedProgress['track-expenses'].days || 0) + 1, 30)
-        };
-      } else {
-        updatedProgress['track-expenses'] = {
-          ...updatedProgress['track-expenses'],
-          days: Math.min(daysSinceStart + 1, 30)
-        };
+      if (todayExpenses > 0 && !isTodayCounted('track-expenses')) {
+        // Success: logged expenses today
+        if (daysDiff === 0) {
+          updatedProgress['track-expenses'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 30),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else if (daysDiff === 1) {
+          updatedProgress['track-expenses'] = {
+            ...progress,
+            days: Math.min((progress.days || 0) + 1, 30),
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        } else {
+          updatedProgress['track-expenses'] = {
+            ...progress,
+            days: 1,
+            lastSuccessfulDate: today,
+            lastCountedDate: today
+          };
+        }
+      } else if (todayExpenses === 0 && daysDiff > 0) {
+        // Failed: didn't log expenses today - reset streak
+        if (daysDiff >= 1) {
+          updatedProgress['track-expenses'] = {
+            ...progress,
+            days: 0,
+            lastSuccessfulDate: progress.lastSuccessfulDate || progress.startDate,
+            lastCountedDate: today
+          };
+        }
       }
     }
 
@@ -1425,8 +1571,17 @@ const FinanceTracker = () => {
                     className="btn btn-primary"
                     onClick={() => {
                       const newChallenges = [...activeChallenges, 'no-impulse'];
+                      const today = new Date().toISOString().split('T')[0];
+                      const newProgress = { 
+                        ...challengeProgress, 
+                        'no-impulse': { 
+                          days: 0, 
+                          startDate: today,
+                          lastSuccessfulDate: today,
+                          lastCountedDate: null
+                        } 
+                      };
                       setActiveChallenges(newChallenges);
-                      const newProgress = { ...challengeProgress, 'no-impulse': { days: 0, startDate: new Date().toISOString() } };
                       setChallengeProgress(newProgress);
                       localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
                       localStorage.setItem('challengeProgress', JSON.stringify(newProgress));
@@ -1480,7 +1635,16 @@ const FinanceTracker = () => {
                     className="btn btn-primary"
                     onClick={() => {
                       const newChallenges = [...activeChallenges, 'save-500'];
-                      const newProgress = { ...challengeProgress, 'save-500': { days: 0, startDate: new Date().toISOString() } };
+                      const today = new Date().toISOString().split('T')[0];
+                      const newProgress = { 
+                        ...challengeProgress, 
+                        'save-500': { 
+                          days: 0, 
+                          startDate: today,
+                          lastSuccessfulDate: today,
+                          lastCountedDate: null
+                        } 
+                      };
                       setActiveChallenges(newChallenges);
                       setChallengeProgress(newProgress);
                       localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
@@ -1534,7 +1698,16 @@ const FinanceTracker = () => {
                     className="btn btn-primary"
                     onClick={() => {
                       const newChallenges = [...activeChallenges, 'no-eating-out'];
-                      const newProgress = { ...challengeProgress, 'no-eating-out': { days: 0, startDate: new Date().toISOString() } };
+                      const today = new Date().toISOString().split('T')[0];
+                      const newProgress = { 
+                        ...challengeProgress, 
+                        'no-eating-out': { 
+                          days: 0, 
+                          startDate: today,
+                          lastSuccessfulDate: today,
+                          lastCountedDate: null
+                        } 
+                      };
                       setActiveChallenges(newChallenges);
                       setChallengeProgress(newProgress);
                       localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
@@ -1588,7 +1761,16 @@ const FinanceTracker = () => {
                     className="btn btn-primary"
                     onClick={() => {
                       const newChallenges = [...activeChallenges, 'track-expenses'];
-                      const newProgress = { ...challengeProgress, 'track-expenses': { days: 0, startDate: new Date().toISOString() } };
+                      const today = new Date().toISOString().split('T')[0];
+                      const newProgress = { 
+                        ...challengeProgress, 
+                        'track-expenses': { 
+                          days: 0, 
+                          startDate: today,
+                          lastSuccessfulDate: today,
+                          lastCountedDate: null
+                        } 
+                      };
                       setActiveChallenges(newChallenges);
                       setChallengeProgress(newProgress);
                       localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
