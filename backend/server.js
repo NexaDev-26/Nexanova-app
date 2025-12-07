@@ -56,11 +56,19 @@ const corsOptions = {
         return callback(new Error('Not allowed by CORS'));
       }
     } else {
-      // Development: allow localhost
-      const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-      if (allowedOrigins.includes(origin)) {
+      // Development: allow all localhost variations and common dev ports
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001',
+        'http://localhost:5173', // Vite default
+        'http://127.0.0.1:5173'
+      ];
+      if (!origin || allowedOrigins.includes(origin) || origin.includes('localhost') || origin.includes('127.0.0.1')) {
         return callback(null, true);
       } else {
+        console.warn('CORS blocked origin:', origin);
         return callback(new Error('Not allowed by CORS'));
       }
     }

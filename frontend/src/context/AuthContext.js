@@ -81,9 +81,60 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: res.data.message || "Login failed" };
 
     } catch (err) {
+      // Better error handling
+      if (!err.response) {
+        // Network error - no response from server
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        const baseUrl = err.config?.baseURL || 'http://localhost:5000/api';
+        
+        let message = "Cannot connect to server.";
+        
+        if (isDevelopment) {
+          message += " Please ensure the backend server is running on port 5000. Run 'npm run server' from the project root.";
+        } else {
+          message += " Please check your internet connection and try again.";
+        }
+        
+        console.error("🌐 Connection Error Details:", {
+          baseURL: baseUrl,
+          code: err.code,
+          message: err.message,
+          config: err.config
+        });
+        
+        return {
+          success: false,
+          message: message
+        };
+      }
+      
+      const status = err.response?.status;
+      const errorMessage = err.response?.data?.message;
+
+      if (status === 401) {
+        return {
+          success: false,
+          message: errorMessage || "Invalid email or password. Please try again."
+        };
+      }
+
+      if (status === 500) {
+        return {
+          success: false,
+          message: "Server error. Please try again later."
+        };
+      }
+
+      if (status === 404) {
+        return {
+          success: false,
+          message: "Login endpoint not found. Please check backend configuration."
+        };
+      }
+
       return {
         success: false,
-        message: err.response?.data?.message || "Network or server error"
+        message: errorMessage || "An unexpected error occurred. Please try again."
       };
     }
   };

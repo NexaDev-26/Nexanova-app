@@ -6,12 +6,15 @@ const { awardPoints } = require('./user');
 
 // Get all habits (optimized query - only select needed columns)
 router.get('/', verifyToken, (req, res) => {
+  const { archived } = req.query;
+  const isActive = archived === 'true' ? 0 : 1;
+  
   db.all(
     `SELECT id, user_id, title, type, category, difficulty, frequency, reminder_time, 
      description, trigger, replacement, streak, longest_streak, last_completed, 
      total_completions, is_active, target_streak, start_date, created_at, updated_at 
-     FROM habits WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC`, 
-    [req.userId], 
+     FROM habits WHERE user_id = ? AND is_active = ? ORDER BY created_at DESC`, 
+    [req.userId, isActive], 
     (err, habits) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error fetching habits' });
@@ -131,11 +134,36 @@ router.post('/', verifyToken, (req, res) => {
   );
 });
 
-// Update habit completion
+// Update habit completion or status
 router.patch('/:id', verifyToken, (req, res) => {
   const { id } = req.params;
-  const { completed_today, notes, trigger, mood } = req.body;
+  const { completed_today, notes, trigger, mood, is_active } = req.body;
   const today = new Date().toISOString().split('T')[0];
+
+  // Handle archive/unarchive
+  if (is_active !== undefined) {
+    db.get('SELECT * FROM habits WHERE id = ? AND user_id = ?', [id, req.userId], (err, habit) => {
+      if (err || !habit) {
+        return res.status(404).json({ success: false, message: 'Habit not found' });
+      }
+
+      db.run(
+        'UPDATE habits SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+        [is_active ? 1 : 0, id, req.userId],
+        function(err) {
+          if (err) {
+            return res.status(500).json({ success: false, message: 'Error updating habit status' });
+          }
+          res.json({ 
+            success: true, 
+            message: is_active ? 'Habit restored' : 'Habit archived',
+            is_active: is_active ? 1 : 0
+          });
+        }
+      );
+    });
+    return;
+  }
 
   // Check if habit belongs to user
   db.get('SELECT * FROM habits WHERE id = ? AND user_id = ?', [id, req.userId], (err, habit) => {
@@ -297,16 +325,112 @@ router.patch('/:id', verifyToken, (req, res) => {
 router.get('/:id/completions', verifyToken, (req, res) => {
   const { id } = req.params;
 
-  db.all(
-    'SELECT * FROM habit_completions WHERE habit_id = ? ORDER BY completion_date DESC',
-    [id],
-    (err, completions) => {
-      if (err) {
-        return res.status(500).json({ success: false, message: 'Error fetching completions' });
-      }
-      res.json({ success: true, completions });
+  // First verify the habit belongs to the user
+  db.get('SELECT user_id FROM habits WHERE id = ?', [id], (err, habit) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error fetching habit' });
     }
-  );
+    if (!habit) {
+      return res.status(404).json({ success: false, message: 'Habit not found' });
+    }
+    if (habit.user_id !== req.userId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    // Now fetch completions
+    db.all(
+      'SELECT * FROM habit_completions WHERE habit_id = ? ORDER BY completion_date DESC',
+      [id],
+      (err, completions) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Error fetching completions' });
+        }
+        res.json({ success: true, completions });
+      }
+    );
+  });
+});
+
+// Update habit (PUT)
+router.put('/:id', verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { 
+    title, 
+    type, 
+    category, 
+    difficulty, 
+    frequency, 
+    reminder_time, 
+    description, 
+    trigger, 
+    replacement 
+  } = req.body;
+
+  // Validate required fields
+  if (!title || !title.trim()) {
+    return res.status(400).json({ success: false, message: 'Habit title is required' });
+  }
+
+  if (!type || !['build', 'break'].includes(type)) {
+    return res.status(400).json({ success: false, message: 'Habit type must be "build" or "break"' });
+  }
+
+  // Clean and prepare data
+  const cleanTitle = title.trim();
+  const cleanCategory = (category && category.trim()) ? category.trim() : null;
+  const cleanDifficulty = difficulty || 'easy';
+  const cleanFrequency = frequency || 'daily';
+  const cleanReminderTime = (reminder_time && reminder_time.trim()) ? reminder_time.trim() : null;
+  const cleanDescription = (description && description.trim()) ? description.trim() : null;
+  const cleanTrigger = (trigger && trigger.trim()) ? trigger.trim() : null;
+  const cleanReplacement = (replacement && replacement.trim()) ? replacement.trim() : null;
+
+  // First verify the habit belongs to the user
+  db.get('SELECT * FROM habits WHERE id = ? AND user_id = ?', [id, req.userId], (err, habit) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error fetching habit' });
+    }
+    if (!habit) {
+      return res.status(404).json({ success: false, message: 'Habit not found' });
+    }
+
+    // Update the habit
+    db.run(
+      `UPDATE habits SET 
+        title = ?, type = ?, category = ?, difficulty = ?, frequency = ?, 
+        reminder_time = ?, description = ?, "trigger" = ?, replacement = ?, 
+        updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ? AND user_id = ?`,
+      [
+        cleanTitle, 
+        type, 
+        cleanCategory, 
+        cleanDifficulty, 
+        cleanFrequency, 
+        cleanReminderTime, 
+        cleanDescription, 
+        cleanTrigger, 
+        cleanReplacement,
+        id,
+        req.userId
+      ],
+      function(err) {
+        if (err) {
+          console.error('❌ Error updating habit:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Error updating habit: ' + err.message 
+          });
+        }
+        console.log(`✅ Habit updated successfully: ID ${id}, Title: ${cleanTitle}`);
+        res.json({ 
+          success: true, 
+          message: 'Habit updated successfully',
+          habit_id: id
+        });
+      }
+    );
+  });
 });
 
 // Delete habit

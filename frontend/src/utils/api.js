@@ -104,7 +104,19 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       // Network error (no response received)
-      console.error("🌐 Network Error: No response received", error.message);
+      const baseUrl = error.config?.baseURL || normalizedBaseUrl;
+      console.error("🌐 Network Error: No response received", {
+        message: error.message,
+        url: error.config?.url,
+        baseURL: baseUrl,
+        code: error.code
+      });
+      
+      // Provide helpful error message
+      if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+        console.error("💡 Tip: Make sure the backend server is running on port 5000");
+        console.error("   Run: npm run server (from project root) or cd backend && npm run dev");
+      }
     } else {
       // Something else happened
       console.error("❌ Error:", error.message);

@@ -355,6 +355,26 @@
   background: var(--bg-card);
 }
 
+.habit-card-enhanced.archived {
+  opacity: 0.7;
+  border-left-color: var(--text-muted);
+  background: var(--bg-beige);
+}
+
+.archived-badge {
+  padding: 0.75rem 1rem;
+  background: var(--bg-beige);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.archived-badge span {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .habit-card-header {
   display: flex;
   justify-content: space-between;
@@ -530,6 +550,24 @@
 
 .btn-icon-small:hover {
   color: var(--primary);
+}
+
+.habit-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.challenge-progress {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.challenge-progress p {
+  margin: 0.5rem 0;
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

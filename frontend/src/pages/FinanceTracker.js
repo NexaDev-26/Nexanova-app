@@ -47,10 +47,24 @@ const FinanceTracker = () => {
   const [sideHustleSuggestions, setSideHustleSuggestions] = useState([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState(null);
   const [regions] = useState(getRegions());
+  const [activeChallenges, setActiveChallenges] = useState(() => {
+    const saved = localStorage.getItem('activeChallenges');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [challengeProgress, setChallengeProgress] = useState(() => {
+    const saved = localStorage.getItem('challengeProgress');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   useEffect(() => {
     loadAllData();
   }, [viewPeriod]);
+
+  useEffect(() => {
+    if (transactions.length > 0 && activeChallenges.length > 0) {
+      updateChallengeProgress();
+    }
+  }, [transactions, activeChallenges]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -64,6 +78,90 @@ const FinanceTracker = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateChallengeProgress = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const updatedProgress = { ...challengeProgress };
+
+    // Update no-impulse challenge
+    if (activeChallenges.includes('no-impulse') && updatedProgress['no-impulse']) {
+      const startDate = new Date(updatedProgress['no-impulse'].startDate);
+      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      updatedProgress['no-impulse'] = {
+        ...updatedProgress['no-impulse'],
+        days: Math.min(daysSinceStart + 1, 7)
+      };
+    }
+
+    // Update save-500 challenge
+    if (activeChallenges.includes('save-500') && updatedProgress['save-500']) {
+      const startDate = new Date(updatedProgress['save-500'].startDate);
+      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      // Check if user saved 500 TZS today
+      const todaySavings = transactions
+        .filter(t => t.type === 'income' && t.date === today && t.amount >= 500)
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      if (todaySavings >= 500) {
+        updatedProgress['save-500'] = {
+          ...updatedProgress['save-500'],
+          days: Math.min((updatedProgress['save-500'].days || 0) + 1, 30)
+        };
+      } else {
+        updatedProgress['save-500'] = {
+          ...updatedProgress['save-500'],
+          days: Math.min(daysSinceStart + 1, 30)
+        };
+      }
+    }
+
+    // Update no-eating-out challenge
+    if (activeChallenges.includes('no-eating-out') && updatedProgress['no-eating-out']) {
+      const startDate = new Date(updatedProgress['no-eating-out'].startDate);
+      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      // Check if user logged any "Food & Dining" expenses today
+      const todayFoodExpenses = transactions
+        .filter(t => t.type === 'expense' && t.date === today && 
+          (t.category === 'Food & Dining' || t.category === 'Restaurants'))
+        .length;
+      
+      if (todayFoodExpenses === 0) {
+        updatedProgress['no-eating-out'] = {
+          ...updatedProgress['no-eating-out'],
+          days: Math.min((updatedProgress['no-eating-out'].days || 0) + 1, 14)
+        };
+      } else {
+        updatedProgress['no-eating-out'] = {
+          ...updatedProgress['no-eating-out'],
+          days: Math.min(daysSinceStart + 1, 14)
+        };
+      }
+    }
+
+    // Update track-expenses challenge
+    if (activeChallenges.includes('track-expenses') && updatedProgress['track-expenses']) {
+      const startDate = new Date(updatedProgress['track-expenses'].startDate);
+      const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+      // Check if user logged any expenses today
+      const todayExpenses = transactions.filter(t => t.date === today && t.type === 'expense').length;
+      
+      if (todayExpenses > 0) {
+        updatedProgress['track-expenses'] = {
+          ...updatedProgress['track-expenses'],
+          days: Math.min((updatedProgress['track-expenses'].days || 0) + 1, 30)
+        };
+      } else {
+        updatedProgress['track-expenses'] = {
+          ...updatedProgress['track-expenses'],
+          days: Math.min(daysSinceStart + 1, 30)
+        };
+      }
+    }
+
+    setChallengeProgress(updatedProgress);
+    // Persist to localStorage
+    localStorage.setItem('challengeProgress', JSON.stringify(updatedProgress));
   };
 
   const loadTransactions = async () => {
@@ -110,19 +208,52 @@ const FinanceTracker = () => {
   };
 
   const loadBudget = async () => {
-    // Load budget from API (to be implemented)
-    // For now, use localStorage
-    const savedBudget = localStorage.getItem('budget');
-    if (savedBudget) {
-      setBudget(parseFloat(savedBudget));
+    try {
+      const response = await api.get('/finance/budget');
+      if (response.data.success && response.data.budget) {
+        setBudget(response.data.budget.amount || 0);
+      } else {
+        // Fallback to localStorage
+        const savedBudget = localStorage.getItem('budget');
+        if (savedBudget) {
+          setBudget(parseFloat(savedBudget));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading budget:', error);
+      // Fallback to localStorage
+      const savedBudget = localStorage.getItem('budget');
+      if (savedBudget) {
+        setBudget(parseFloat(savedBudget));
+      }
     }
   };
 
   const loadSavingsGoal = async () => {
-    // Load savings goal from API (to be implemented)
-    const savedGoal = localStorage.getItem('savingsGoal');
-    if (savedGoal) {
-      setSavingsGoal(JSON.parse(savedGoal));
+    try {
+      const response = await api.get('/finance/goals');
+      if (response.data.success && response.data.goals && response.data.goals.length > 0) {
+        const activeGoal = response.data.goals.find(g => !g.is_completed) || response.data.goals[0];
+        if (activeGoal) {
+          setSavingsGoal({
+            target: activeGoal.target_amount || 0,
+            current: activeGoal.current_amount || 0
+          });
+        }
+      } else {
+        // Fallback to localStorage
+        const savedGoal = localStorage.getItem('savingsGoal');
+        if (savedGoal) {
+          setSavingsGoal(JSON.parse(savedGoal));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading savings goal:', error);
+      // Fallback to localStorage
+      const savedGoal = localStorage.getItem('savingsGoal');
+      if (savedGoal) {
+        setSavingsGoal(JSON.parse(savedGoal));
+      }
     }
   };
 
@@ -522,6 +653,13 @@ const FinanceTracker = () => {
           >
             <span>💡</span>
             <span>Side Hustle</span>
+          </button>
+          <button
+            className={`tab-enhanced ${activeTab === 'challenges' ? 'active' : ''}`}
+            onClick={() => setActiveTab('challenges')}
+          >
+            <span>🎯</span>
+            <span>Challenges</span>
           </button>
         </div>
 
@@ -1234,6 +1372,235 @@ const FinanceTracker = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Challenges Tab */}
+        {activeTab === 'challenges' && (
+          <div className="challenges-section">
+            <div className="challenges-header">
+              <h3>💰 Money Challenges</h3>
+              <p>Take on challenges to build better financial habits</p>
+            </div>
+
+            <div className="challenges-grid">
+              {/* 7-Day No Impulse Challenge */}
+              <div className="card challenge-card">
+                <div className="challenge-icon">🚫</div>
+                <h4>7-Day No Impulse Challenge</h4>
+                <p>Avoid all impulse purchases for 7 days. Track your savings!</p>
+                <div className="challenge-stats">
+                  <div className="challenge-stat">
+                    <span className="stat-value">7</span>
+                    <span className="stat-label">Days</span>
+                  </div>
+                  <div className="challenge-stat">
+                    <span className="stat-value">🏆</span>
+                    <span className="stat-label">Badge</span>
+                  </div>
+                </div>
+                {activeChallenges.includes('no-impulse') ? (
+                  <div className="challenge-progress-section">
+                    <div className="progress-bar-habit">
+                      <div 
+                        className="progress-fill-habit"
+                        style={{ width: `${Math.min((challengeProgress['no-impulse']?.days || 0) / 7 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <p>{challengeProgress['no-impulse']?.days || 0}/7 days completed</p>
+                    <button 
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        const newChallenges = activeChallenges.filter(c => c !== 'no-impulse');
+                        setActiveChallenges(newChallenges);
+                        localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                        showToast('Challenge cancelled', 'info');
+                      }}
+                    >
+                      Cancel Challenge
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const newChallenges = [...activeChallenges, 'no-impulse'];
+                      setActiveChallenges(newChallenges);
+                      const newProgress = { ...challengeProgress, 'no-impulse': { days: 0, startDate: new Date().toISOString() } };
+                      setChallengeProgress(newProgress);
+                      localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                      localStorage.setItem('challengeProgress', JSON.stringify(newProgress));
+                      showToast('7-Day No Impulse Challenge started! 🎯', 'success');
+                    }}
+                  >
+                    Start Challenge
+                  </button>
+                )}
+              </div>
+
+              {/* Save 500 TZS Daily Challenge */}
+              <div className="card challenge-card">
+                <div className="challenge-icon">💵</div>
+                <h4>Save 500 TZS Daily</h4>
+                <p>Save 500 TZS every day for 30 days. Build a savings habit!</p>
+                <div className="challenge-stats">
+                  <div className="challenge-stat">
+                    <span className="stat-value">30</span>
+                    <span className="stat-label">Days</span>
+                  </div>
+                  <div className="challenge-stat">
+                    <span className="stat-value">15,000</span>
+                    <span className="stat-label">TZS Total</span>
+                  </div>
+                </div>
+                {activeChallenges.includes('save-500') ? (
+                  <div className="challenge-progress-section">
+                    <div className="progress-bar-habit">
+                      <div 
+                        className="progress-fill-habit"
+                        style={{ width: `${Math.min((challengeProgress['save-500']?.days || 0) / 30 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <p>{challengeProgress['save-500']?.days || 0}/30 days completed</p>
+                    <p className="challenge-saved">Saved: {formatCurrency((challengeProgress['save-500']?.days || 0) * 500)}</p>
+                    <button 
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        const newChallenges = activeChallenges.filter(c => c !== 'save-500');
+                        setActiveChallenges(newChallenges);
+                        localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                        showToast('Challenge cancelled', 'info');
+                      }}
+                    >
+                      Cancel Challenge
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const newChallenges = [...activeChallenges, 'save-500'];
+                      const newProgress = { ...challengeProgress, 'save-500': { days: 0, startDate: new Date().toISOString() } };
+                      setActiveChallenges(newChallenges);
+                      setChallengeProgress(newProgress);
+                      localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                      localStorage.setItem('challengeProgress', JSON.stringify(newProgress));
+                      showToast('Save 500 TZS Daily Challenge started! 💰', 'success');
+                    }}
+                  >
+                    Start Challenge
+                  </button>
+                )}
+              </div>
+
+              {/* No Eating Out Challenge */}
+              <div className="card challenge-card">
+                <div className="challenge-icon">🍳</div>
+                <h4>No Eating Out (14 Days)</h4>
+                <p>Cook at home for 14 days. Save money and eat healthier!</p>
+                <div className="challenge-stats">
+                  <div className="challenge-stat">
+                    <span className="stat-value">14</span>
+                    <span className="stat-label">Days</span>
+                  </div>
+                  <div className="challenge-stat">
+                    <span className="stat-value">💚</span>
+                    <span className="stat-label">Health</span>
+                  </div>
+                </div>
+                {activeChallenges.includes('no-eating-out') ? (
+                  <div className="challenge-progress-section">
+                    <div className="progress-bar-habit">
+                      <div 
+                        className="progress-fill-habit"
+                        style={{ width: `${Math.min((challengeProgress['no-eating-out']?.days || 0) / 14 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <p>{challengeProgress['no-eating-out']?.days || 0}/14 days completed</p>
+                    <button 
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        const newChallenges = activeChallenges.filter(c => c !== 'no-eating-out');
+                        setActiveChallenges(newChallenges);
+                        localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                        showToast('Challenge cancelled', 'info');
+                      }}
+                    >
+                      Cancel Challenge
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const newChallenges = [...activeChallenges, 'no-eating-out'];
+                      const newProgress = { ...challengeProgress, 'no-eating-out': { days: 0, startDate: new Date().toISOString() } };
+                      setActiveChallenges(newChallenges);
+                      setChallengeProgress(newProgress);
+                      localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                      localStorage.setItem('challengeProgress', JSON.stringify(newProgress));
+                      showToast('No Eating Out Challenge started! 🍳', 'success');
+                    }}
+                  >
+                    Start Challenge
+                  </button>
+                )}
+              </div>
+
+              {/* Track Every Expense Challenge */}
+              <div className="card challenge-card">
+                <div className="challenge-icon">📊</div>
+                <h4>Track Every Expense (30 Days)</h4>
+                <p>Log every single expense for 30 days. Build awareness!</p>
+                <div className="challenge-stats">
+                  <div className="challenge-stat">
+                    <span className="stat-value">30</span>
+                    <span className="stat-label">Days</span>
+                  </div>
+                  <div className="challenge-stat">
+                    <span className="stat-value">📈</span>
+                    <span className="stat-label">Awareness</span>
+                  </div>
+                </div>
+                {activeChallenges.includes('track-expenses') ? (
+                  <div className="challenge-progress-section">
+                    <div className="progress-bar-habit">
+                      <div 
+                        className="progress-fill-habit"
+                        style={{ width: `${Math.min((challengeProgress['track-expenses']?.days || 0) / 30 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <p>{challengeProgress['track-expenses']?.days || 0}/30 days completed</p>
+                    <button 
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        const newChallenges = activeChallenges.filter(c => c !== 'track-expenses');
+                        setActiveChallenges(newChallenges);
+                        localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                        showToast('Challenge cancelled', 'info');
+                      }}
+                    >
+                      Cancel Challenge
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const newChallenges = [...activeChallenges, 'track-expenses'];
+                      const newProgress = { ...challengeProgress, 'track-expenses': { days: 0, startDate: new Date().toISOString() } };
+                      setActiveChallenges(newChallenges);
+                      setChallengeProgress(newProgress);
+                      localStorage.setItem('activeChallenges', JSON.stringify(newChallenges));
+                      localStorage.setItem('challengeProgress', JSON.stringify(newProgress));
+                      showToast('Track Every Expense Challenge started! 📊', 'success');
+                    }}
+                  >
+                    Start Challenge
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

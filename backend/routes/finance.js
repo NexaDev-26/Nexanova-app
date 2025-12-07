@@ -155,36 +155,58 @@ router.patch('/goals/:id', verifyToken, (req, res) => {
   const { id } = req.params;
   const { title, description, target_amount, current_amount, deadline, is_completed } = req.body;
 
-  const updates = [];
-  const params = [];
-
-  if (title !== undefined) { updates.push('title = ?'); params.push(title); }
-  if (description !== undefined) { updates.push('description = ?'); params.push(description); }
-  if (target_amount !== undefined) { updates.push('target_amount = ?'); params.push(target_amount); }
-  if (current_amount !== undefined) { updates.push('current_amount = ?'); params.push(current_amount); }
-  if (deadline !== undefined) { updates.push('deadline = ?'); params.push(deadline); }
-  if (is_completed !== undefined) { updates.push('is_completed = ?'); params.push(is_completed ? 1 : 0); }
-
-  if (updates.length === 0) {
-    return res.status(400).json({ success: false, message: 'No fields to update' });
-  }
-
-  updates.push('updated_at = CURRENT_TIMESTAMP');
-  params.push(id, req.userId);
-
-  db.run(
-    `UPDATE savings_goals SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
-    params,
-    function(err) {
-      if (err) {
-        return res.status(500).json({ success: false, message: 'Error updating goal' });
-      }
-      if (this.changes === 0) {
-        return res.status(404).json({ success: false, message: 'Goal not found' });
-      }
-      res.json({ success: true });
+  // First get the current goal to check if it's being completed
+  db.get('SELECT * FROM savings_goals WHERE id = ? AND user_id = ?', [id, req.userId], (err, goal) => {
+    if (err || !goal) {
+      return res.status(404).json({ success: false, message: 'Goal not found' });
     }
-  );
+
+    const updates = [];
+    const params = [];
+
+    if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+    if (target_amount !== undefined) { updates.push('target_amount = ?'); params.push(target_amount); }
+    if (current_amount !== undefined) { updates.push('current_amount = ?'); params.push(current_amount); }
+    if (deadline !== undefined) { updates.push('deadline = ?'); params.push(deadline); }
+    if (is_completed !== undefined) { updates.push('is_completed = ?'); params.push(is_completed ? 1 : 0); }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update' });
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id, req.userId);
+
+    db.run(
+      `UPDATE savings_goals SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+      params,
+      function(err) {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Error updating goal' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ success: false, message: 'Goal not found' });
+        }
+
+        // Check if goal was just completed
+        const newCurrentAmount = current_amount !== undefined ? current_amount : goal.current_amount;
+        const newTargetAmount = target_amount !== undefined ? target_amount : goal.target_amount;
+        const newIsCompleted = is_completed !== undefined ? is_completed : goal.is_completed;
+
+        // Award badge if goal is completed
+        if ((newIsCompleted || newCurrentAmount >= newTargetAmount) && !goal.is_completed) {
+          checkFinancialBadges(req.userId, newTargetAmount, goal.title);
+          // Award bonus points
+          awardPoints(req.userId, 100, `Savings goal achieved: ${goal.title}`).catch(err => {
+            console.error('Error awarding goal completion points:', err);
+          });
+        }
+
+        res.json({ success: true });
+      }
+    );
+  });
 });
 
 // Delete savings goal
@@ -936,6 +958,46 @@ function generateSideHustleSuggestions(capital, location = 'urban', locationDeta
 
   // Limit to 8-10 best suggestions based on capital
   return suggestions.slice(0, 10);
+}
+
+// Check and award financial badges
+function checkFinancialBadges(userId, targetAmount, goalTitle) {
+  // Award badge for completing savings goal
+  const badgeTitle = `Savings Goal Achieved: ${goalTitle} 💰`;
+  
+  db.run(
+    'INSERT INTO rewards (user_id, type, title, description) VALUES (?, ?, ?, ?)',
+    [userId, 'financial', badgeTitle, `Successfully saved ${targetAmount.toLocaleString()} TZS`],
+    (err) => {
+      if (err) {
+        console.error('Error awarding financial badge:', err);
+      } else {
+        console.log(`✅ Financial badge awarded: ${badgeTitle} to user ${userId}`);
+      }
+    }
+  );
+
+  // Check for milestone badges based on amount
+  const milestones = [
+    { amount: 10000, title: 'First 10K Saved 🎯' },
+    { amount: 50000, title: '50K Milestone Achieved 💵' },
+    { amount: 100000, title: '100K Savings Champion 🏆' },
+    { amount: 500000, title: 'Half Million Saver ⭐' }
+  ];
+
+  milestones.forEach(milestone => {
+    if (targetAmount >= milestone.amount) {
+      db.run(
+        'INSERT INTO rewards (user_id, type, title, description) VALUES (?, ?, ?, ?)',
+        [userId, 'financial', milestone.title, `Reached ${milestone.amount.toLocaleString()} TZS savings milestone`],
+        (err) => {
+          if (!err) {
+            console.log(`✅ Milestone badge awarded: ${milestone.title}`);
+          }
+        }
+      );
+    }
+  });
 }
 
 module.exports = router;

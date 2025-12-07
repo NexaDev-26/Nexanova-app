@@ -611,3 +611,115 @@
     margin-top: 0.5rem;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CHALLENGES SECTION
+   ══════════════════════════════════════════════════════════════════════════ */
+.challenges-section {
+  padding: 1.5rem 0;
+}
+
+.challenges-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.challenges-header h3 {
+  color: var(--text);
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.challenges-header p {
+  color: var(--text-light);
+  font-size: 0.9375rem;
+}
+
+.challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.challenge-card {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.challenge-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.challenge-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-card h4 {
+  color: var(--text);
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.challenge-card p {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.challenge-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.challenge-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.challenge-stat .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.challenge-stat .stat-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.challenge-progress-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.challenge-progress-section p {
+  margin: 0.75rem 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.challenge-saved {
+  color: var(--green) !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}

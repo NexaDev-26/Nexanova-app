@@ -18,7 +18,10 @@ const HabitTracker = () => {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showJournalModal, setShowJournalModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingHabit, setEditingHabit] = useState(null);
   const [selectedHabit, setSelectedHabit] = useState(null);
+  const [activeChallenge, setActiveChallenge] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // list, calendar, stats
   const [newHabit, setNewHabit] = useState({
     title: '',
@@ -36,9 +39,9 @@ const HabitTracker = () => {
   const [aiInsight, setAiInsight] = useState('');
 
   // Define all functions first before using them
-  const loadHabits = async () => {
+  const loadHabits = async (showArchived = false) => {
     try {
-      const response = await api.get('/habits');
+      const response = await api.get(`/habits${showArchived ? '?archived=true' : ''}`);
       if (response.data.success) {
         setHabits(response.data.habits || []);
         return response.data.habits || [];
@@ -46,6 +49,7 @@ const HabitTracker = () => {
       return [];
     } catch (error) {
       console.error('Error loading habits:', error);
+      showToast('Failed to load habits. Please try again.', 'error');
       return [];
     }
   };
@@ -123,6 +127,31 @@ const HabitTracker = () => {
   }, []);
 
   useEffect(() => {
+    // Reload habits when switching to archived tab
+    if (activeTab === 'archived') {
+      loadHabits(true).then(loadedHabits => {
+        const completionMap = {};
+        Promise.all(
+          loadedHabits.map(async (habit) => {
+            try {
+              const response = await api.get(`/habits/${habit.id}/completions`);
+              if (response.data.success) {
+                completionMap[habit.id] = response.data.completions || [];
+              }
+            } catch (error) {
+              console.error(`Error loading completions for habit ${habit.id}:`, error);
+            }
+          })
+        ).then(() => {
+          setCompletions(completionMap);
+          loadStats(loadedHabits, completionMap);
+        });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => {
     if (selectedHabit) {
       generateAIInsight(selectedHabit);
     }
@@ -191,6 +220,55 @@ const HabitTracker = () => {
     }
   };
 
+  const handleUpdateHabit = async () => {
+    if (!newHabit.title.trim() || !editingHabit) {
+      showToast('Please enter a habit name', 'error');
+      return;
+    }
+
+    try {
+      const habitData = {
+        title: newHabit.title.trim(),
+        type: newHabit.type,
+        category: newHabit.category.trim() || null,
+        difficulty: newHabit.difficulty || 'easy',
+        frequency: newHabit.frequency || 'daily',
+        reminder_time: newHabit.reminder_time.trim() || null,
+        description: newHabit.description.trim() || null,
+        trigger: newHabit.trigger.trim() || null,
+        replacement: newHabit.replacement.trim() || null
+      };
+
+      const response = await api.put(`/habits/${editingHabit.id}`, habitData);
+
+      if (response.data.success) {
+        await loadAllData();
+        setNewHabit({
+          title: '',
+          type: 'build',
+          category: '',
+          difficulty: 'easy',
+          frequency: 'daily',
+          reminder_time: '',
+          description: '',
+          trigger: '',
+          replacement: ''
+        });
+        setEditingHabit(null);
+        setShowEditForm(false);
+        showToast('Habit updated successfully! ✨', 'success');
+      } else {
+        showToast(response.data.message || 'Failed to update habit', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating habit:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to update habit. Please try again.';
+      showToast(errorMessage, 'error');
+    }
+  };
+
   const handleTemplateSelect = (template) => {
     setNewHabit(template);
     setShowAddForm(true);
@@ -237,49 +315,76 @@ const HabitTracker = () => {
   };
 
   const handleAddJournal = async () => {
-    if (!journalEntry.note.trim() || !journalEntry.habit_id) return;
+    if (!journalEntry.habit_id) {
+      showToast('Please select a habit', 'error');
+      return;
+    }
 
     try {
-      await api.patch(`/habits/${journalEntry.habit_id}`, {
+      const response = await api.patch(`/habits/${journalEntry.habit_id}`, {
         completed_today: true,
-        notes: journalEntry.note,
-        trigger: journalEntry.trigger,
+        notes: journalEntry.note.trim() || null,
+        trigger: journalEntry.trigger.trim() || null,
         mood: journalEntry.mood
       });
-      const loadedHabits = await loadHabits();
-      const completionMap = {};
-      for (const habit of loadedHabits) {
-        const response = await api.get(`/habits/${habit.id}/completions`);
-        if (response.data.success) {
-          completionMap[habit.id] = response.data.completions || [];
-        }
+      
+      if (response.data.success) {
+        showToast('Journal entry saved! ✨', 'success');
+        await loadAllData();
+        setShowJournalModal(false);
+        setJournalEntry({ habit_id: null, note: '', trigger: '', mood: 5 });
+        setSelectedHabit(null);
+      } else {
+        showToast(response.data.message || 'Failed to save journal entry', 'error');
       }
-      setCompletions(completionMap);
-      loadStats(loadedHabits, completionMap);
-      setShowJournalModal(false);
-      setJournalEntry({ habit_id: null, note: '', trigger: '', mood: 5 });
     } catch (error) {
       console.error('Error adding journal:', error);
+      showToast(
+        error.response?.data?.message || 'Failed to save journal entry. Please try again.',
+        'error'
+      );
     }
   };
 
   const handleDeleteHabit = async (habitId) => {
-    if (!window.confirm('Are you sure you want to delete this habit?')) return;
+    if (!window.confirm('Are you sure you want to delete this habit? This action cannot be undone.')) return;
 
     try {
-      await api.delete(`/habits/${habitId}`);
-      const loadedHabits = await loadHabits();
-      const completionMap = {};
-      for (const habit of loadedHabits) {
-        const response = await api.get(`/habits/${habit.id}/completions`);
-        if (response.data.success) {
-          completionMap[habit.id] = response.data.completions || [];
-        }
+      const response = await api.delete(`/habits/${habitId}`);
+      if (response.data.success) {
+        showToast('Habit deleted successfully', 'success');
+        await loadAllData();
       }
-      setCompletions(completionMap);
-      loadStats(loadedHabits, completionMap);
     } catch (error) {
       console.error('Error deleting habit:', error);
+      showToast(
+        error.response?.data?.message || 'Failed to delete habit. Please try again.',
+        'error'
+      );
+    }
+  };
+
+  const handleArchiveHabit = async (habitId, archive = true) => {
+    try {
+      const response = await api.patch(`/habits/${habitId}`, { is_active: archive ? 0 : 1 });
+      if (response.data.success) {
+        showToast(
+          archive ? 'Habit archived successfully 📦' : 'Habit restored successfully ♻️',
+          'success'
+        );
+        // Reload based on current tab
+        if (activeTab === 'archived') {
+          await loadHabits(true);
+        } else {
+          await loadAllData();
+        }
+      }
+    } catch (error) {
+      console.error('Error archiving habit:', error);
+      showToast(
+        error.response?.data?.message || 'Failed to archive habit. Please try again.',
+        'error'
+      );
     }
   };
 
@@ -307,9 +412,10 @@ const HabitTracker = () => {
   };
 
   const filteredHabits = habits.filter(h => {
-    if (activeTab === 'build') return h.type === 'build';
-    if (activeTab === 'break') return h.type === 'break';
-    return true;
+    if (activeTab === 'archived') return h.is_active === 0;
+    if (activeTab === 'build') return h.type === 'build' && h.is_active !== 0;
+    if (activeTab === 'break') return h.type === 'break' && h.is_active !== 0;
+    return h.is_active !== 0;
   });
 
   const today = new Date().toISOString().split('T')[0];
@@ -428,12 +534,22 @@ const HabitTracker = () => {
             <span>🎯</span>
             <span>Challenge</span>
           </button>
+          <button
+            className={`tab-enhanced ${activeTab === 'archived' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('archived');
+              loadHabits(true);
+            }}
+          >
+            <span>📦</span>
+            <span>Archived</span>
+          </button>
         </div>
 
         {/* List View */}
         {viewMode === 'list' && (
           <>
-            {!showAddForm ? (
+            {!showAddForm && !showEditForm ? (
               <div className="action-buttons">
                 <button
                   className="btn btn-primary"
@@ -443,7 +559,10 @@ const HabitTracker = () => {
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setShowTemplateModal(true)}
+                  onClick={() => {
+                    setShowTemplateModal(true);
+                    setActiveTab('templates');
+                  }}
                 >
                   📚 Use Template
                 </button>
@@ -451,8 +570,23 @@ const HabitTracker = () => {
             ) : (
               <div className="card add-habit-form-enhanced">
                 <div className="form-header">
-                  <h3>Create New Habit</h3>
-                  <button className="close-btn" onClick={() => setShowAddForm(false)}>✕</button>
+                  <h3>{showEditForm ? 'Edit Habit' : 'Create New Habit'}</h3>
+                  <button className="close-btn" onClick={() => {
+                    setShowAddForm(false);
+                    setShowEditForm(false);
+                    setEditingHabit(null);
+                    setNewHabit({
+                      title: '',
+                      type: 'build',
+                      category: '',
+                      difficulty: 'easy',
+                      frequency: 'daily',
+                      reminder_time: '',
+                      description: '',
+                      trigger: '',
+                      replacement: ''
+                    });
+                  }}>✕</button>
                 </div>
                 <div className="form-grid">
                   <div className="form-group">
@@ -572,17 +706,17 @@ const HabitTracker = () => {
                   </button>
                   <button
                     className="btn btn-primary"
-                    onClick={handleAddHabit}
+                    onClick={showEditForm ? handleUpdateHabit : handleAddHabit}
                     disabled={!newHabit.title.trim()}
                   >
-                    Create Habit
+                    {showEditForm ? 'Update Habit' : 'Create Habit'}
                   </button>
                 </div>
               </div>
             )}
 
             {/* Habits List */}
-            {activeTab !== 'templates' && activeTab !== 'challenges' && (
+            {activeTab !== 'templates' && activeTab !== 'challenges' && activeTab !== 'archived' && (
               <div className="habits-list-enhanced">
                 {filteredHabits.length === 0 ? (
                   <div className="empty-state">
@@ -610,6 +744,72 @@ const HabitTracker = () => {
                         setSelectedHabit(habit);
                         setShowStatsModal(true);
                       }}
+                      onEdit={() => {
+                        setEditingHabit(habit);
+                        setNewHabit({
+                          title: habit.title,
+                          type: habit.type,
+                          category: habit.category || '',
+                          difficulty: habit.difficulty || 'easy',
+                          frequency: habit.frequency || 'daily',
+                          reminder_time: habit.reminder_time || '',
+                          description: habit.description || '',
+                          trigger: habit.trigger || '',
+                          replacement: habit.replacement || ''
+                        });
+                        setShowEditForm(true);
+                      }}
+                      onArchive={() => handleArchiveHabit(habit.id, true)}
+                      completions={completions[habit.id] || []}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Archived Habits Tab */}
+            {activeTab === 'archived' && (
+              <div className="habits-list-enhanced">
+                {filteredHabits.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-state-icon">📦</div>
+                    <h3>No archived habits</h3>
+                    <p>Archived habits will appear here</p>
+                  </div>
+                ) : (
+                  filteredHabits.map((habit) => (
+                    <EnhancedHabitCard
+                      key={habit.id}
+                      habit={habit}
+                      isCompleted={false}
+                      onToggle={() => {}}
+                      onDelete={() => handleDeleteHabit(habit.id)}
+                      onJournal={() => {}}
+                      onViewDetails={() => {
+                        setSelectedHabit(habit);
+                        setShowStatsModal(true);
+                      }}
+                      onEdit={() => {
+                        setEditingHabit(habit);
+                        setNewHabit({
+                          title: habit.title,
+                          type: habit.type,
+                          category: habit.category || '',
+                          difficulty: habit.difficulty || 'easy',
+                          frequency: habit.frequency || 'daily',
+                          reminder_time: habit.reminder_time || '',
+                          description: habit.description || '',
+                          trigger: habit.trigger || '',
+                          replacement: habit.replacement || ''
+                        });
+                        setShowEditForm(true);
+                      }}
+                      onArchive={() => {
+                        handleArchiveHabit(habit.id, false);
+                        setTimeout(() => {
+                          loadHabits(true);
+                        }, 500);
+                      }}
                       completions={completions[habit.id] || []}
                     />
                   ))
@@ -631,7 +831,11 @@ const HabitTracker = () => {
                     </div>
                     <button
                       className="btn btn-primary btn-small"
-                      onClick={() => applyTemplate(template)}
+                      onClick={() => {
+                        applyTemplate(template);
+                        setShowTemplateModal(false);
+                        setActiveTab('my-habits');
+                      }}
                     >
                       Use This Template
                     </button>
@@ -657,19 +861,54 @@ const HabitTracker = () => {
                       <span className="stat-label">Badge Reward</span>
                     </div>
                   </div>
-                  <button className="btn btn-primary">Start Challenge</button>
+                  {activeChallenge === '30day' ? (
+                    <div className="challenge-progress">
+                      <p>Challenge Active! Keep going! 💪</p>
+                      <div className="progress-bar-habit">
+                        <div 
+                          className="progress-fill-habit"
+                          style={{ width: `${Math.min((stats.longestStreak / 30) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                      <p>{stats.longestStreak}/30 days completed</p>
+                    </div>
+                  ) : (
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={() => {
+                        setActiveChallenge('30day');
+                        showToast('30-Day Challenge started! 🎯', 'success');
+                      }}
+                    >
+                      Start Challenge
+                    </button>
+                  )}
                 </div>
                 <div className="card challenge-card-large">
                   <div className="challenge-icon">💪</div>
                   <h3>Habit Stacking Challenge</h3>
                   <p>Link 3 habits together using the Atomic Habits method. Build a powerful routine!</p>
-                  <button className="btn btn-primary">Learn More</button>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      showToast('Habit stacking: Complete 3 habits in sequence daily! 🔗', 'info');
+                    }}
+                  >
+                    Learn More
+                  </button>
                 </div>
                 <div className="card challenge-card-large">
                   <div className="challenge-icon">🌱</div>
                   <h3>Micro-Habit Challenge</h3>
                   <p>Start with tiny habits (2 minutes) and watch them grow. Perfect for beginners!</p>
-                  <button className="btn btn-primary">Start Small</button>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      showToast('Micro-habits: Start with just 2 minutes daily! 🌱', 'info');
+                    }}
+                  >
+                    Start Small
+                  </button>
                 </div>
               </div>
             )}
@@ -851,7 +1090,7 @@ const HabitTracker = () => {
   );
 };
 
-const EnhancedHabitCard = ({ habit, isCompleted, onToggle, onDelete, onJournal, onViewDetails, completions }) => {
+const EnhancedHabitCard = ({ habit, isCompleted, onToggle, onDelete, onArchive, onJournal, onViewDetails, onEdit, completions }) => {
   const getStreakBadge = (streak) => {
     if (streak >= 90) return { emoji: '🏆', label: 'Champion', color: '#f59e0b' };
     if (streak >= 60) return { emoji: '⭐', label: 'Star', color: '#8b5cf6' };
@@ -863,12 +1102,22 @@ const EnhancedHabitCard = ({ habit, isCompleted, onToggle, onDelete, onJournal, 
   };
 
   const badge = getStreakBadge(habit.streak);
-  const completionRate = completions.length > 0 
-    ? Math.round((completions.length / 30) * 100) 
-    : 0;
+  // Calculate completion rate based on habit age
+  const calculateCompletionRate = (habit, completions) => {
+    if (!habit.start_date || completions.length === 0) return 0;
+    const startDate = new Date(habit.start_date);
+    const today = new Date();
+    const daysSinceStart = Math.max(1, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+    const expectedCompletions = habit.frequency === 'daily' ? daysSinceStart : Math.ceil(daysSinceStart / 7);
+    return Math.min(100, Math.round((completions.length / expectedCompletions) * 100));
+  };
+
+  const completionRate = calculateCompletionRate(habit, completions);
+
+  const isArchived = habit.is_active === 0;
 
   return (
-    <div className={`card habit-card-enhanced ${isCompleted ? 'completed' : ''}`}>
+    <div className={`card habit-card-enhanced ${isCompleted ? 'completed' : ''} ${isArchived ? 'archived' : ''}`}>
       <div className="habit-card-header">
         <div className="habit-main-info">
           <div className="habit-title-row">
@@ -886,7 +1135,20 @@ const EnhancedHabitCard = ({ habit, isCompleted, onToggle, onDelete, onJournal, 
             <p className="habit-description">{habit.description}</p>
           )}
         </div>
-        <button className="delete-btn" onClick={onDelete} title="Delete habit">🗑️</button>
+        <div className="habit-card-actions">
+          {isArchived ? (
+            <>
+              <button className="btn-icon-small" onClick={onArchive} title="Restore habit">♻️</button>
+              <button className="btn-icon-small" onClick={onDelete} title="Delete habit">🗑️</button>
+            </>
+          ) : (
+            <>
+              <button className="btn-icon-small" onClick={onEdit} title="Edit habit">✏️</button>
+              <button className="btn-icon-small" onClick={onArchive} title="Archive habit">📦</button>
+              <button className="btn-icon-small" onClick={onDelete} title="Delete habit">🗑️</button>
+            </>
+          )}
+        </div>
       </div>
 
       {habit.trigger && (
@@ -930,30 +1192,37 @@ const EnhancedHabitCard = ({ habit, isCompleted, onToggle, onDelete, onJournal, 
         <span className="progress-text">Progress to 30 days: {Math.min(habit.streak, 30)}/30</span>
       </div>
 
-      <div className="habit-actions-enhanced">
-        <label className="completion-toggle-enhanced">
-          <input
-            type="checkbox"
-            checked={isCompleted}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggle(e.target.checked);
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <span className="toggle-label-enhanced">
-            {isCompleted ? '✅ Completed today' : 'Mark as completed'}
-          </span>
-        </label>
-        <div className="action-buttons-row">
-          <button className="btn-icon-small" onClick={onJournal} title="Add journal entry">
-            📔
-          </button>
-          <button className="btn-icon-small" onClick={onViewDetails} title="View details">
-            📊
-          </button>
+      {!isArchived && (
+        <div className="habit-actions-enhanced">
+          <label className="completion-toggle-enhanced">
+            <input
+              type="checkbox"
+              checked={isCompleted}
+              onChange={(e) => {
+                e.stopPropagation();
+                onToggle(e.target.checked);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span className="toggle-label-enhanced">
+              {isCompleted ? '✅ Completed today' : 'Mark as completed'}
+            </span>
+          </label>
+          <div className="action-buttons-row">
+            <button className="btn-icon-small" onClick={onJournal} title="Add journal entry">
+              📔
+            </button>
+            <button className="btn-icon-small" onClick={onViewDetails} title="View details">
+              📊
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      {isArchived && (
+        <div className="archived-badge">
+          <span>📦 Archived</span>
+        </div>
+      )}
     </div>
   );
 };

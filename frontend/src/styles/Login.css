@@ -87,6 +87,23 @@
   gap: 0.5rem;
 }
 
+.error-message.backend-offline {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+  flex-direction: column;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.error-message.backend-offline code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  margin-top: 0.5rem;
+}
+
 .login-form {
   margin-bottom: 1.5rem;
 }
@@ -122,6 +139,51 @@
 
 .login-form input::placeholder {
   color: var(--text-muted);
+}
+
+/* Password input wrapper with toggle button */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+}
+
+.password-toggle:active {
+  transform: scale(0.95);
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
 }
 
 .form-options {
