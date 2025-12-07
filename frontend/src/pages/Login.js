@@ -49,13 +49,13 @@ export default function Login() {
 
     // Validation
     if (!email.trim()) {
-      setError('Please enter your email');
+      setError(t('auth.errors.enterEmail'));
       setLoading(false);
       return;
     }
 
     if (!password) {
-      setError('Please enter your password');
+      setError(t('auth.errors.enterPassword'));
       setLoading(false);
       return;
     }
@@ -64,17 +64,30 @@ export default function Login() {
       const result = await login(email.trim(), password);
 
       if (result.success) {
-        showToast('Welcome back! 🎉', 'success');
+        showToast(t('auth.welcomeBack') + ' 🎉', 'success');
         // Navigation will happen automatically via useEffect when isAuthenticated changes
         navigate('/dashboard', { replace: true });
       } else {
-        const errorMessage = result.message || 'Login failed. Please check your credentials.';
+        // Map error messages to translations
+        let errorKey = 'auth.errors.loginFailed';
+        if (result.message?.includes('Invalid') || result.message?.includes('invalid')) {
+          errorKey = 'auth.errors.invalidCredentials';
+        } else if (result.message?.includes('Server') || result.message?.includes('server')) {
+          errorKey = 'auth.errors.serverError';
+        } else if (result.message?.includes('connect') || result.message?.includes('network')) {
+          errorKey = 'auth.errors.networkError';
+        }
+        const errorMessage = result.message || t(errorKey);
         setError(errorMessage);
         showToast(errorMessage, 'error');
       }
     } catch (err) {
       // Error message is already handled in AuthContext login function
-      const errorMessage = err.message || 'An unexpected error occurred. Please try again.';
+      let errorKey = 'auth.errors.unexpectedError';
+      if (err.message?.includes('connect') || err.message?.includes('network')) {
+        errorKey = 'auth.errors.networkError';
+      }
+      const errorMessage = err.message || t(errorKey);
       setError(errorMessage);
       showToast(errorMessage, 'error');
       console.error('Login error:', err);
@@ -96,7 +109,7 @@ export default function Login() {
             <div className="error-message backend-offline" role="alert">
               <span>🔴</span>
               <span>
-                Backend server is offline. Please start the backend server:
+                {t('auth.errors.backendOffline')}
                 <br />
                 <code style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
                   npm run server
@@ -170,10 +183,10 @@ export default function Login() {
 
           <div className="login-footer">
             <a href="/forgot-password" className="forgot-password-link">
-              Forgot password?
+              {t('auth.forgotPassword')}
             </a>
             <p className="signup-link">
-              Don't have an account? <a href="/onboarding">Sign up</a>
+              {t('auth.dontHaveAccount')} <a href="/onboarding">{t('auth.signUp')}</a>
             </p>
           </div>
         </form>

@@ -75,6 +75,9 @@ export const AuthProvider = ({ children }) => {
 
         api.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
 
+        // Dispatch event to notify LocaleContext to reload user language
+        window.dispatchEvent(new CustomEvent('userLoggedIn'));
+
         return { success: true };
       }
 

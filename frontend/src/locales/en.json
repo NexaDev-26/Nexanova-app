@@ -74,7 +74,17 @@
     "alreadyHaveAccount": "Already have an account?",
     "loginHere": "Login here",
     "signUp": "Sign up",
-    "dontHaveAccount": "Don't have an account?"
+    "dontHaveAccount": "Don't have an account?",
+    "errors": {
+      "enterEmail": "Please enter your email",
+      "enterPassword": "Please enter your password",
+      "loginFailed": "Login failed. Please check your credentials.",
+      "invalidCredentials": "Invalid email or password. Please try again.",
+      "serverError": "Server error. Please try again later.",
+      "networkError": "Cannot connect to server. Please check your connection.",
+      "unexpectedError": "An unexpected error occurred. Please try again.",
+      "backendOffline": "Backend server is offline. Please start the backend server:"
+    }
   },
   "navigation": {
     "home": "Home",

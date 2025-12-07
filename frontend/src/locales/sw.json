@@ -74,7 +74,17 @@
     "alreadyHaveAccount": "Tayari una akaunti?",
     "loginHere": "Ingia hapa",
     "signUp": "Jisajili",
-    "dontHaveAccount": "Huna akaunti?"
+    "dontHaveAccount": "Huna akaunti?",
+    "errors": {
+      "enterEmail": "Tafadhali ingiza barua pepe yako",
+      "enterPassword": "Tafadhali ingiza nenosiri lako",
+      "loginFailed": "Kuingia kumeshindwa. Tafadhali angalia maelezo yako.",
+      "invalidCredentials": "Barua pepe au nenosiri si sahihi. Tafadhali jaribu tena.",
+      "serverError": "Hitilafu ya seva. Tafadhali jaribu tena baadaye.",
+      "networkError": "Haiwezi kuunganisha na seva. Tafadhali angalia muunganisho wako.",
+      "unexpectedError": "Hitilafu isiyotarajiwa imetokea. Tafadhali jaribu tena.",
+      "backendOffline": "Seva ya nyuma haifanyi kazi. Tafadhali anzisha seva ya nyuma:"
+    }
   },
   "navigation": {
     "home": "Nyumbani",

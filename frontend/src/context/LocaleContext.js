@@ -174,6 +174,32 @@ export const LocaleProvider = ({ children }) => {
       } catch {}
     };
     loadPrefs();
+    
+    // Listen for storage changes (when user logs in/out)
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' && e.newValue) {
+        // User logged in, reload preferences
+        loadPrefs();
+      } else if (e.key === 'token' && !e.newValue) {
+        // User logged out, reset to default
+        const defaultLang = detectSystemLanguage();
+        setLanguage(defaultLang);
+        localStorage.setItem('nexanova_language', defaultLang);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom login event
+    const handleLogin = () => {
+      loadPrefs();
+    };
+    window.addEventListener('userLoggedIn', handleLogin);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userLoggedIn', handleLogin);
+    };
   }, []);
 
   // Detect automatically if no prefs stored
@@ -182,12 +208,16 @@ export const LocaleProvider = ({ children }) => {
   }, []);
 
   const updateLanguage = (lang) => {
-    setLanguage(lang);
-    localStorage.setItem('nexanova_language', lang);
-    // Update backend if authenticated
-    const token = localStorage.getItem('token');
-    if (token) {
-      api.patch('/user/profile', { language: lang }).catch(() => {});
+    if (lang !== language) {
+      setLanguage(lang);
+      localStorage.setItem('nexanova_language', lang);
+      // Update backend if authenticated
+      const token = localStorage.getItem('token');
+      if (token) {
+        api.patch('/user/profile', { language: lang }).catch(() => {});
+      }
+      // Force re-render by dispatching custom event
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
     }
   };
 
