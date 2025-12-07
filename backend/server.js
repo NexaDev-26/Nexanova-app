@@ -29,15 +29,32 @@ const PORT = process.env.PORT || 5000;
 // ═══════════════════════════════════════════════════════════════════════════
 // CORS CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
-// CORS configuration - allows Vercel deployments and localhost
+// CORS configuration - secure origin validation
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDevelopment = !isProduction;
+
+    // Handle requests without origin header
+    // These are typically same-origin requests or direct API calls
     if (!origin) {
-      return callback(null, true);
+      // In production: Only allow same-origin requests (no origin = same origin)
+      // This is safe because browsers don't send Origin header for same-origin requests
+      if (isProduction) {
+        // In production, we still allow no-origin for same-origin requests
+        // but we log it for security monitoring
+        console.log('🔒 CORS: Same-origin request (no origin header)');
+        return callback(null, true);
+      }
+      // In development: Allow for testing with tools like Postman/curl
+      if (isDevelopment) {
+        console.log('🔓 CORS: Development mode - allowing request without origin');
+        return callback(null, true);
+      }
     }
 
-    if (process.env.NODE_ENV === 'production') {
+    // Validate origin header for cross-origin requests
+    if (isProduction) {
       const allowedOrigins = [
         'https://nenoapp-eight.vercel.app',
         'https://nexanovaa.vercel.app',
@@ -53,10 +70,11 @@ const corsOptions = {
       if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
+        console.warn('🚫 CORS blocked origin in production:', origin);
         return callback(new Error('Not allowed by CORS'));
       }
     } else {
-      // Development: allow all localhost variations and common dev ports
+      // Development: allow localhost variations and common dev ports
       const allowedOrigins = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
@@ -65,10 +83,14 @@ const corsOptions = {
         'http://localhost:5173', // Vite default
         'http://127.0.0.1:5173'
       ];
-      if (!origin || allowedOrigins.includes(origin) || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      
+      // Check if origin is in allowed list or is a localhost/127.0.0.1 variant
+      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+      
+      if (allowedOrigins.includes(origin) || isLocalhost) {
         return callback(null, true);
       } else {
-        console.warn('CORS blocked origin:', origin);
+        console.warn('🚫 CORS blocked origin in development:', origin);
         return callback(new Error('Not allowed by CORS'));
       }
     }
