@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -70,11 +70,32 @@ const StepWrapper = ({ title, description, children }) => (
 
 const WelcomeStep = ({ onNext, formData, updateFormData }) => {
   const { languages, updateLanguage } = useLocale();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   
   const handleLanguageSelect = (langCode) => {
     updateFormData('language', langCode);
     updateLanguage(langCode);
+    setIsDropdownOpen(false);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isDropdownOpen]);
+
+  const currentLanguage = languages[formData.language] || languages.en;
 
   return (
     <StepWrapper title="Welcome to NexaNova" description="Your Private Healing Space">
@@ -83,37 +104,108 @@ const WelcomeStep = ({ onNext, formData, updateFormData }) => {
         Transform your mind, habits, and finances with AI-powered guidance. Built for African youth, designed for growth.
       </p>
       
-      {/* Language Selection */}
-      <div className="form-group" style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
+      {/* Language Selection Dropdown */}
+      <div className="form-group" style={{ marginTop: '2rem', marginBottom: '1.5rem', position: 'relative' }}>
         <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'block', textAlign: 'center' }}>
           Choose Your Language / Chagua Lugha Yako
         </label>
-        <div className="language-selector" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', maxWidth: '500px', margin: '0 auto' }}>
-          {Object.entries(languages).map(([code, lang]) => (
-            <button
-              key={code}
-              type="button"
-              className={`language-option ${formData.language === code ? 'selected' : ''}`}
-              onClick={() => handleLanguageSelect(code)}
+        <div ref={dropdownRef} style={{ position: 'relative', maxWidth: '400px', margin: '0 auto' }}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            style={{
+              width: '100%',
+              padding: '1rem 1.5rem',
+              border: '2px solid #e5e7eb',
+              borderRadius: '12px',
+              background: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              transition: 'all 0.2s ease',
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#14b8a6'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>{currentLanguage.flag}</span>
+              <span>{currentLanguage.nativeName}</span>
+            </div>
+            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {isDropdownOpen ? '▲' : '▼'}
+            </span>
+          </button>
+
+          {isDropdownOpen && (
+            <div
               style={{
-                padding: '1rem',
-                border: `2px solid ${formData.language === code ? '#14b8a6' : '#e5e7eb'}`,
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '0.5rem',
+                background: '#fff',
+                border: '2px solid #e5e7eb',
                 borderRadius: '12px',
-                background: formData.language === code ? '#f0fdfa' : '#fff',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem'
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                zIndex: 1000,
+                maxHeight: '300px',
+                overflowY: 'auto'
               }}
             >
-              <span style={{ fontSize: '2rem' }}>{lang.flag}</span>
-              <span style={{ fontSize: '0.875rem', fontWeight: formData.language === code ? 600 : 400 }}>
-                {lang.nativeName}
-              </span>
-            </button>
-          ))}
+              {Object.entries(languages).map(([code, lang]) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => handleLanguageSelect(code)}
+                  style={{
+                    width: '100%',
+                    padding: '1rem 1.5rem',
+                    border: 'none',
+                    background: formData.language === code ? '#f0fdfa' : 'transparent',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem',
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.9375rem',
+                    textAlign: 'left',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (formData.language !== code) {
+                      e.currentTarget.style.background = '#f9fafb';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (formData.language !== code) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>{lang.flag}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <span style={{ fontWeight: formData.language === code ? 600 : 400 }}>
+                        {lang.nativeName}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        {lang.name}
+                      </span>
+                    </div>
+                  </div>
+                  {formData.language === code && (
+                    <span style={{ color: '#14b8a6', fontSize: '1.25rem' }}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
