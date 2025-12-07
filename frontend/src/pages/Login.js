@@ -25,14 +25,20 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Check backend health on mount
+  // Check backend health on mount and show toast if offline
   useEffect(() => {
     const checkBackend = async () => {
       try {
         const health = await checkApiHealth();
-        setBackendStatus(health.success ? 'online' : 'offline');
+        if (health.success) {
+          setBackendStatus('online');
+        } else {
+          setBackendStatus('offline');
+          showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
+        }
       } catch (err) {
         setBackendStatus('offline');
+        showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
       }
     };
     
@@ -40,7 +46,7 @@ export default function Login() {
     // Check every 10 seconds
     const interval = setInterval(checkBackend, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [t, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,19 +111,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {backendStatus === 'offline' && (
-            <div className="error-message backend-offline" role="alert">
-              <span>🔴</span>
-              <span>
-                {t('auth.errors.backendOffline')}
-                <br />
-                <code style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
-                  npm run server
-                </code>
-              </span>
-            </div>
-          )}
-          {error && backendStatus !== 'offline' && (
+          {error && (
             <div className="error-message" role="alert">
               <span>⚠️</span>
               <span>{error}</span>
