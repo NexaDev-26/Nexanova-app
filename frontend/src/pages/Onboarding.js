@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLocale } from '../context/LocaleContext';
 import '../styles/Onboarding.css';
 
 // --------------------- UTILS ---------------------
@@ -67,21 +68,67 @@ const StepWrapper = ({ title, description, children }) => (
   </div>
 );
 
-const WelcomeStep = ({ onNext }) => (
-  <StepWrapper title="Welcome to NexaNova" description="Your Private Healing Space">
-    <div className="logo-animation">🌱</div>
-    <p className="description">
-      Transform your mind, habits, and finances with AI-powered guidance. Built for African youth, designed for growth.
-    </p>
-    <div className="button-group">
-      <button className="btn btn-primary" onClick={onNext}>Start My Journey</button>
-      <button className="btn btn-secondary" onClick={() => window.open('#', '_blank')}>Learn More</button>
-    </div>
-    <p className="login-prompt">
-      Already have an account? <Link to="/login" className="login-link">Login here</Link>
-    </p>
-  </StepWrapper>
-);
+const WelcomeStep = ({ onNext, formData, updateFormData }) => {
+  const { languages, updateLanguage } = useLocale();
+  
+  const handleLanguageSelect = (langCode) => {
+    updateFormData('language', langCode);
+    updateLanguage(langCode);
+  };
+
+  return (
+    <StepWrapper title="Welcome to NexaNova" description="Your Private Healing Space">
+      <div className="logo-animation">🌱</div>
+      <p className="description">
+        Transform your mind, habits, and finances with AI-powered guidance. Built for African youth, designed for growth.
+      </p>
+      
+      {/* Language Selection */}
+      <div className="form-group" style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
+        <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'block', textAlign: 'center' }}>
+          Choose Your Language / Chagua Lugha Yako
+        </label>
+        <div className="language-selector" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', maxWidth: '500px', margin: '0 auto' }}>
+          {Object.entries(languages).map(([code, lang]) => (
+            <button
+              key={code}
+              type="button"
+              className={`language-option ${formData.language === code ? 'selected' : ''}`}
+              onClick={() => handleLanguageSelect(code)}
+              style={{
+                padding: '1rem',
+                border: `2px solid ${formData.language === code ? '#14b8a6' : '#e5e7eb'}`,
+                borderRadius: '12px',
+                background: formData.language === code ? '#f0fdfa' : '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span style={{ fontSize: '2rem' }}>{lang.flag}</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: formData.language === code ? 600 : 400 }}>
+                {lang.nativeName}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="button-group">
+        <button className="btn btn-primary" onClick={onNext} disabled={!formData.language}>
+          Start My Journey
+        </button>
+        <button className="btn btn-secondary" onClick={() => window.open('#', '_blank')}>Learn More</button>
+      </div>
+      <p className="login-prompt">
+        Already have an account? <Link to="/login" className="login-link">Login here</Link>
+      </p>
+    </StepWrapper>
+  );
+};
 
 const PathSelectionStep = ({ selectedPath, onSelect, onNext, formData, updateFormData }) => {
   const paths = [
@@ -207,9 +254,11 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { language } = useLocale();
   const [formData, setFormData] = useState({
     email: '', password: '', nickname: '', path: '', ai_personality: '',
-    anonymous_mode: false, offline_mode: true, store_chat: true, emotional_scan: {}
+    anonymous_mode: false, offline_mode: true, store_chat: true, emotional_scan: {},
+    language: language || 'en'
   });
 
   useEffect(() => {
@@ -281,7 +330,7 @@ const Onboarding = () => {
       </div>
       <div className="onboarding-container">
         {error && <div className="error-banner"><span>⚠️</span><span>{error}</span><button onClick={() => setError('')}>✕</button></div>}
-        {step === 1 && <WelcomeStep onNext={handleNext} />}
+        {step === 1 && <WelcomeStep onNext={handleNext} formData={formData} updateFormData={updateFormData} />}
         {step === 2 && <PathSelectionStep selectedPath={formData.path} onSelect={(path) => updateFormData('path', path)} onNext={handleNext} formData={formData} updateFormData={updateFormData} />}
         {step === 3 && <PrivacySetupStep formData={formData} updateFormData={updateFormData} onNext={handleNext} />}
         {step === 4 && <EmotionalScanStep formData={formData} updateFormData={updateFormData} onComplete={handleComplete} loading={loading} />}

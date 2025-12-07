@@ -29,11 +29,20 @@ db.serialize(() => {
     anonymous_mode INTEGER DEFAULT 0,
     offline_mode INTEGER DEFAULT 1,
     store_chat INTEGER DEFAULT 1,
+    language TEXT DEFAULT 'en',
     total_points INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  
+  // Add language column to existing users table if it doesn't exist
+  db.run(`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`, (err) => {
+    // Ignore error if column already exists
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding language column:', err);
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HABITS TABLE

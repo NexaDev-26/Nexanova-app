@@ -1,0 +1,151 @@
+{
+  "common": {
+    "welcome": "Karibu",
+    "loading": "Inapakia...",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "add": "Ongeza",
+    "close": "Funga",
+    "submit": "Wasilisha",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "continue": "Endelea",
+    "yes": "Ndiyo",
+    "no": "Hapana",
+    "search": "Tafuta",
+    "filter": "Chuja",
+    "all": "Zote",
+    "none": "Hakuna"
+  },
+  "auth": {
+    "login": "Ingia",
+    "logout": "Toka",
+    "register": "Jisajili",
+    "email": "Barua pepe",
+    "password": "Nenosiri",
+    "forgotPassword": "Umesahau nenosiri?",
+    "welcomeBack": "Karibu tena",
+    "signInToContinue": "Ingia ili kuendelea na safari yako",
+    "enterEmail": "Ingiza barua pepe yako",
+    "enterPassword": "Ingiza nenosiri lako",
+    "showPassword": "Onyesha nenosiri",
+    "hidePassword": "Ficha nenosiri",
+    "createAccount": "Unda Akaunti",
+    "alreadyHaveAccount": "Tayari una akaunti?",
+    "loginHere": "Ingia hapa"
+  },
+  "onboarding": {
+    "welcome": "Karibu NexaNova",
+    "subtitle": "Nafasi Yako ya Kujiponya",
+    "description": "Badilisha akili yako, tabia, na fedha kwa mwongozo wa AI. Imejengwa kwa vijana wa Afrika, imeundwa kwa ukuaji.",
+    "startJourney": "Anza Safari Yangu",
+    "learnMore": "Jifunze Zaidi",
+    "choosePath": "Chagua Njia Yako",
+    "pathDescription": "Chagua safari inayokuita",
+    "chooseLanguage": "Chagua Lugha Yako",
+    "languageDescription": "Chagua lugha unayopendelea kwa programu",
+    "privacySetup": "Usanidi wa Faragha",
+    "privacyDescription": "Data yako, udhibiti wako",
+    "stayAnonymous": "Kaa Bila Jina?",
+    "yesStayAnonymous": "Ndiyo, Kaa Bila Jina",
+    "useNickname": "Tumia Jina la Utani",
+    "chooseNickname": "Chagua jina la utani",
+    "createStrongPassword": "Unda nenosiri thabiti",
+    "enableOfflineMode": "Washa Hali ya Nje ya Mtandao",
+    "storeChatHistory": "Hifadhi Historia ya Mazungumzo",
+    "emotionalScan": "Uchunguzi wa Hisia",
+    "emotionalScanDescription": "Tusaidie kukuelewa zaidi",
+    "completeSetup": "Maliza Usanidi wa Safari",
+    "settingUp": "Inaweka safari yako...",
+    "chooseAIMentor": "Chagua Mshauri Wako wa AI",
+    "paths": {
+      "mindReset": {
+        "title": "Kurekebisha Akili",
+        "icon": "🧠",
+        "description": "Ponya akili yako, pata amani, jenga ujasiri"
+      },
+      "moneyBuilder": {
+        "title": "Kujenga Pesa",
+        "icon": "💰",
+        "description": "Jenga tabia za kifedha, weka akiba, na ukuze utajiri"
+      },
+      "habitTransformer": {
+        "title": "Kubadilisha Tabia",
+        "icon": "✨",
+        "description": "Vunja tabia mbaya, jenga nzuri, badilisha maisha yako"
+      },
+      "all": {
+        "title": "Yote Hapo Juu",
+        "icon": "🌟",
+        "description": "Safari kamili ya mabadiliko"
+      }
+    },
+    "personalities": {
+      "wiseSage": "Mwenye Hekima",
+      "coach": "Kocha",
+      "friend": "Rafiki"
+    }
+  },
+  "dashboard": {
+    "title": "Dashibodi",
+    "welcome": "Karibu tena",
+    "overview": "Muhtasari",
+    "stats": "Takwimu",
+    "recentActivity": "Shughuli za Hivi Karibuni"
+  },
+  "habits": {
+    "title": "Kufuatilia Tabia",
+    "addHabit": "Ongeza Tabia",
+    "editHabit": "Hariri Tabia",
+    "deleteHabit": "Futa Tabia",
+    "completeHabit": "Maliza Tabia",
+    "streak": "Mfululizo",
+    "completionRate": "Kiwango cha Kukamilisha",
+    "activeHabits": "Tabia Zinazofanya Kazi",
+    "archivedHabits": "Tabia Zilizohifadhiwa",
+    "viewDetails": "Angalia Maelezo",
+    "noHabits": "Bado hakuna tabia. Anza kujenga tabia nzuri leo!",
+    "habitsCompleted": "Tabia Zilizokamilishwa",
+    "currentStreak": "Mfululizo wa Sasa",
+    "longestStreak": "Mfululizo Mrefu Zaidi"
+  },
+  "finance": {
+    "title": "Kufuatilia Fedha",
+    "income": "Mapato",
+    "expense": "Matumizi",
+    "balance": "Salio",
+    "addTransaction": "Ongeza Muamala",
+    "editTransaction": "Hariri Muamala",
+    "deleteTransaction": "Futa Muamala",
+    "budget": "Bajeti",
+    "savingsGoal": "Lengo la Akiba",
+    "transactions": "Miamala",
+    "overview": "Muhtasari",
+    "goals": "Malengo",
+    "challenges": "Changamoto",
+    "sideHustle": "Kipato cha Ziada",
+    "totalIncome": "Jumla ya Mapato",
+    "totalExpense": "Jumla ya Matumizi",
+    "remainingBudget": "Bajeti Iliyobaki"
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "language": "Lugha",
+    "changeLanguage": "Badilisha Lugha",
+    "profile": "Wasifu",
+    "preferences": "Mapendeleo",
+    "notifications": "Arifa",
+    "privacy": "Faragha"
+  },
+  "errors": {
+    "required": "Sehemu hii inahitajika",
+    "invalidEmail": "Anwani ya barua pepe si sahihi",
+    "weakPassword": "Nenosiri ni dhaifu sana",
+    "networkError": "Hitilafu ya mtandao. Tafadhali angalia muunganisho wako.",
+    "serverError": "Hitilafu ya seva. Tafadhali jaribu tena baadaye.",
+    "unknownError": "Hitilafu isiyotarajiwa imetokea"
+  }
+}
+

@@ -163,8 +163,14 @@ export const LocaleProvider = ({ children }) => {
         const res = await api.get('/user/profile');
         const user = res.data.user;
 
-        if (user.language) setLanguage(user.language);
-        if (user.currency) setCurrency(user.currency);
+        if (user?.language) {
+          setLanguage(user.language);
+          localStorage.setItem('nexanova_language', user.language);
+        }
+        if (user?.currency) {
+          setCurrency(user.currency);
+          localStorage.setItem('nexanova_currency', user.currency);
+        }
       } catch {}
     };
     loadPrefs();
@@ -178,7 +184,11 @@ export const LocaleProvider = ({ children }) => {
   const updateLanguage = (lang) => {
     setLanguage(lang);
     localStorage.setItem('nexanova_language', lang);
-    api.patch('/user/preferences', { language: lang }).catch(() => {});
+    // Update backend if authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.patch('/user/profile', { language: lang }).catch(() => {});
+    }
   };
 
   const updateCurrency = (curr) => {

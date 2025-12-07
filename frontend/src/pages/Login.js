@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLocale } from '../context/LocaleContext';
 import { checkApiHealth } from '../utils/api';
 import '../styles/Login.css';
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -85,8 +87,8 @@ export default function Login() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
-          <h1>Welcome Back</h1>
-          <p>Sign in to continue your journey</p>
+          <h1>{t('auth.welcomeBack')}</h1>
+          <p>{t('auth.signInToContinue')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -110,11 +112,11 @@ export default function Login() {
           )}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('auth.enterEmail')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -124,12 +126,12 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <div className="password-input-wrapper">
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder={t('auth.enterPassword')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -141,7 +143,7 @@ export default function Login() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPassword ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -163,7 +165,7 @@ export default function Login() {
             className="login-button"
             disabled={loading || !email.trim() || !password}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('common.loading') : t('auth.login')}
           </button>
 
           <div className="login-footer">

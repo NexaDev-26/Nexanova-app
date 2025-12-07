@@ -57,6 +57,25 @@
     "edit": "Edit",
     "close": "Close"
   },
+  "auth": {
+    "login": "Sign In",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "welcomeBack": "Welcome Back",
+    "signInToContinue": "Sign in to continue your journey",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginHere": "Login here",
+    "signUp": "Sign up",
+    "dontHaveAccount": "Don't have an account?"
+  },
   "navigation": {
     "home": "Home",
     "journal": "Journal",

@@ -57,6 +57,25 @@
     "edit": "Hariri",
     "close": "Funga"
   },
+  "auth": {
+    "login": "Ingia",
+    "logout": "Toka",
+    "register": "Jisajili",
+    "email": "Barua pepe",
+    "password": "Nenosiri",
+    "forgotPassword": "Umesahau nenosiri?",
+    "welcomeBack": "Karibu tena",
+    "signInToContinue": "Ingia ili kuendelea na safari yako",
+    "enterEmail": "Ingiza barua pepe yako",
+    "enterPassword": "Ingiza nenosiri lako",
+    "showPassword": "Onyesha nenosiri",
+    "hidePassword": "Ficha nenosiri",
+    "createAccount": "Unda Akaunti",
+    "alreadyHaveAccount": "Tayari una akaunti?",
+    "loginHere": "Ingia hapa",
+    "signUp": "Jisajili",
+    "dontHaveAccount": "Huna akaunti?"
+  },
   "navigation": {
     "home": "Nyumbani",
     "journal": "Dairi",

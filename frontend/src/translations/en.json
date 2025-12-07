@@ -1,0 +1,151 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "none": "None"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "welcomeBack": "Welcome Back",
+    "signInToContinue": "Sign in to continue your journey",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginHere": "Login here"
+  },
+  "onboarding": {
+    "welcome": "Welcome to NexaNova",
+    "subtitle": "Your Private Healing Space",
+    "description": "Transform your mind, habits, and finances with AI-powered guidance. Built for African youth, designed for growth.",
+    "startJourney": "Start My Journey",
+    "learnMore": "Learn More",
+    "choosePath": "Choose Your Path",
+    "pathDescription": "Select the journey that calls to you",
+    "chooseLanguage": "Choose Your Language",
+    "languageDescription": "Select your preferred language for the app",
+    "privacySetup": "Privacy Setup",
+    "privacyDescription": "Your data, your control",
+    "stayAnonymous": "Stay Anonymous?",
+    "yesStayAnonymous": "Yes, Stay Anonymous",
+    "useNickname": "Use Nickname",
+    "chooseNickname": "Choose a nickname",
+    "createStrongPassword": "Create a strong password",
+    "enableOfflineMode": "Enable Offline Mode",
+    "storeChatHistory": "Store Chat History",
+    "emotionalScan": "Emotional Scan",
+    "emotionalScanDescription": "Help us understand you better",
+    "completeSetup": "Complete Journey Setup",
+    "settingUp": "Setting up your journey...",
+    "chooseAIMentor": "Choose Your AI Mentor",
+    "paths": {
+      "mindReset": {
+        "title": "Mind Reset",
+        "icon": "🧠",
+        "description": "Heal your mind, find peace, build resilience"
+      },
+      "moneyBuilder": {
+        "title": "Money Builder",
+        "icon": "💰",
+        "description": "Build financial habits, save, and grow wealth"
+      },
+      "habitTransformer": {
+        "title": "Habit Transformer",
+        "icon": "✨",
+        "description": "Break bad habits, build good ones, transform your life"
+      },
+      "all": {
+        "title": "All of the Above",
+        "icon": "🌟",
+        "description": "Complete transformation journey"
+      }
+    },
+    "personalities": {
+      "wiseSage": "Wise Sage",
+      "coach": "Coach",
+      "friend": "Friend"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "overview": "Overview",
+    "stats": "Statistics",
+    "recentActivity": "Recent Activity"
+  },
+  "habits": {
+    "title": "Habit Tracker",
+    "addHabit": "Add Habit",
+    "editHabit": "Edit Habit",
+    "deleteHabit": "Delete Habit",
+    "completeHabit": "Complete Habit",
+    "streak": "Streak",
+    "completionRate": "Completion Rate",
+    "activeHabits": "Active Habits",
+    "archivedHabits": "Archived Habits",
+    "viewDetails": "View Details",
+    "noHabits": "No habits yet. Start building good habits today!",
+    "habitsCompleted": "Habits Completed",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak"
+  },
+  "finance": {
+    "title": "Finance Tracker",
+    "income": "Income",
+    "expense": "Expense",
+    "balance": "Balance",
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "deleteTransaction": "Delete Transaction",
+    "budget": "Budget",
+    "savingsGoal": "Savings Goal",
+    "transactions": "Transactions",
+    "overview": "Overview",
+    "goals": "Goals",
+    "challenges": "Challenges",
+    "sideHustle": "Side Hustle",
+    "totalIncome": "Total Income",
+    "totalExpense": "Total Expense",
+    "remainingBudget": "Remaining Budget"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "changeLanguage": "Change Language",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "privacy": "Privacy"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "weakPassword": "Password is too weak",
+    "networkError": "Network error. Please check your connection.",
+    "serverError": "Server error. Please try again later.",
+    "unknownError": "An unexpected error occurred"
+  }
+}
+

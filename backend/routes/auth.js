@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'producti
 /* Register */
 router.post('/register', async (req, res) => {
   try {
-    const { nickname, email, password, path, ai_personality, anonymous_mode = false } = req.body;
+    const { nickname, email, password, path, ai_personality, anonymous_mode = false, language = 'en' } = req.body;
     if (!email || !password || !path || !ai_personality) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
@@ -32,7 +32,8 @@ router.post('/register', async (req, res) => {
       password_hash: hash,
       path: path,
       ai_personality: ai_personality,
-      anonymous_mode: anonymous_mode
+      anonymous_mode: anonymous_mode,
+      language: language || 'en'
     };
 
     // Insert user
