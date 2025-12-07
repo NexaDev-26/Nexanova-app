@@ -27,18 +27,30 @@ export default function Login() {
 
   // Check backend health on mount and show toast if offline
   useEffect(() => {
+    let previousStatus = null;
+    
     const checkBackend = async () => {
       try {
         const health = await checkApiHealth();
         if (health.success) {
+          if (previousStatus === 'offline') {
+            showToast('✅ Backend server is now online!', 'success');
+          }
           setBackendStatus('online');
+          previousStatus = 'online';
         } else {
+          if (previousStatus !== 'offline') {
+            showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
+          }
           setBackendStatus('offline');
-          showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
+          previousStatus = 'offline';
         }
       } catch (err) {
+        if (previousStatus !== 'offline') {
+          showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
+        }
         setBackendStatus('offline');
-        showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
+        previousStatus = 'offline';
       }
     };
     
