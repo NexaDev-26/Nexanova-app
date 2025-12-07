@@ -106,15 +106,100 @@ const FinanceTracker = () => {
       const todayDate = new Date(today);
       const daysDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
       
-      // Check if user made any impulse purchases today (expenses without description or in impulse categories)
-      const impulseCategories = ['Shopping', 'Entertainment', 'Other'];
-      const todayImpulsePurchases = transactions.filter(t => 
-        t.type === 'expense' && 
-        t.date === today && 
-        (impulseCategories.includes(t.category) || !t.description || t.description.toLowerCase().includes('impulse'))
-      ).length;
+      // Get all expenses today
+      const todayExpenses = transactions.filter(t => 
+        t.type === 'expense' && t.date === today
+      );
       
-      if (todayImpulsePurchases === 0 && !isTodayCounted('no-impulse')) {
+      // Define impulse purchase categories (non-essential spending)
+      // Based on actual EXPENSE_CATEGORIES: Food, Transport, Shopping, Bills, Entertainment, Health, Education, Savings, Other
+      const impulseCategories = [
+        'Shopping',  // Non-essential shopping
+        'Entertainment',  // Movies, games, etc.
+        'Other'  // Unspecified purchases
+      ];
+      
+      // Define essential categories (these are typically NOT impulse purchases)
+      const essentialCategories = [
+        'Food',  // Groceries (but check description for restaurants)
+        'Transport',  // Essential transportation
+        'Bills',  // Essential bills
+        'Health',  // Healthcare expenses
+        'Education',  // Education expenses
+        'Savings'  // Savings deposits
+      ];
+      
+      // Check for impulse purchases using multiple heuristics
+      const hasImpulsePurchase = todayExpenses.some(expense => {
+        const category = expense.category || '';
+        const description = (expense.description || '').toLowerCase();
+        const amount = parseFloat(expense.amount) || 0;
+        
+        // Heuristic 1: Category-based detection - explicit impulse categories
+        if (impulseCategories.includes(category)) {
+          return true; // Likely impulse purchase
+        }
+        
+        // Heuristic 2: Essential categories with suspicious patterns
+        if (category === 'Food') {
+          // Food category could be groceries (essential) or restaurants (impulse)
+          const impulseKeywords = ['restaurant', 'cafe', 'takeout', 'delivery', 'fast food', 'snack', 'treat', 'eating out', 'dining out'];
+          if (impulseKeywords.some(keyword => description.includes(keyword))) {
+            return true; // Likely impulse dining
+          }
+          // If no description and small amount, might be snack/impulse
+          if (!description && amount < 5000) {
+            return true; // Small unplanned food purchase
+          }
+          return false; // Likely groceries, not impulse
+        }
+        
+        // Heuristic 3: Transport - check if it's unplanned/unnecessary
+        if (category === 'Transport') {
+          const impulseKeywords = ['taxi', 'uber', 'bolt', 'unplanned', 'impulse'];
+          if (impulseKeywords.some(keyword => description.includes(keyword))) {
+            return true; // Unplanned transport
+          }
+          return false; // Essential transport
+        }
+        
+        // Heuristic 4: Other essential categories - check description for impulse indicators
+        if (essentialCategories.includes(category)) {
+          // Check if description explicitly mentions impulse
+          if (description.includes('impulse') || description.includes('unplanned') || description.includes('spontaneous')) {
+            return true;
+          }
+          return false; // Essential expense, not impulse
+        }
+        
+        // Heuristic 5: Missing description suggests unplanned/impulse purchase
+        if (!expense.description || expense.description.trim() === '') {
+          // If it's a small amount in an unknown/other category, might be impulse
+          if (amount < 10000 && !essentialCategories.includes(category)) {
+            return true; // Likely small impulse purchase
+          }
+          // If it's Shopping/Entertainment/Other with no description, definitely impulse
+          if (impulseCategories.includes(category)) {
+            return true;
+          }
+        }
+        
+        // Heuristic 6: Explicit impulse keywords in description (for any category)
+        const impulseKeywords = ['impulse', 'spontaneous', 'unplanned', 'just because', 'felt like', 'wanted', 'bought on a whim'];
+        if (impulseKeywords.some(keyword => description.includes(keyword))) {
+          return true;
+        }
+        
+        // Heuristic 7: Large amounts in non-essential categories without description
+        if (amount > 50000 && !essentialCategories.includes(category) && (!expense.description || expense.description.trim() === '')) {
+          return true; // Large unplanned purchase
+        }
+        
+        return false; // Not detected as impulse purchase
+      });
+      
+      // Only increment if NO impulse purchases detected AND not already counted today
+      if (!hasImpulsePurchase && !isTodayCounted('no-impulse')) {
         // Success: no impulse purchases today
         if (daysDiff === 0) {
           // Same day - increment if not already counted
@@ -141,7 +226,7 @@ const FinanceTracker = () => {
             lastCountedDate: today
           };
         }
-      } else if (todayImpulsePurchases > 0) {
+      } else if (hasImpulsePurchase) {
         // Failed: impulse purchase detected - reset streak
         updatedProgress['no-impulse'] = {
           ...progress,
