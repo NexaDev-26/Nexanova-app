@@ -25,32 +25,14 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Check backend health on mount and show toast if offline
+  // Check backend health on mount
   useEffect(() => {
-    let previousStatus = null;
-    
     const checkBackend = async () => {
       try {
         const health = await checkApiHealth();
-        if (health.success) {
-          if (previousStatus === 'offline') {
-            showToast('✅ Backend server is now online!', 'success');
-          }
-          setBackendStatus('online');
-          previousStatus = 'online';
-        } else {
-          if (previousStatus !== 'offline') {
-            showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
-          }
-          setBackendStatus('offline');
-          previousStatus = 'offline';
-        }
+        setBackendStatus(health.success ? 'online' : 'offline');
       } catch (err) {
-        if (previousStatus !== 'offline') {
-          showToast(t('auth.errors.backendOffline') + ' npm run server', 'error');
-        }
         setBackendStatus('offline');
-        previousStatus = 'offline';
       }
     };
     
@@ -58,7 +40,7 @@ export default function Login() {
     // Check every 10 seconds
     const interval = setInterval(checkBackend, 10000);
     return () => clearInterval(interval);
-  }, [t, showToast]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,7 +105,19 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {error && (
+          {backendStatus === 'offline' && (
+            <div className="error-message backend-offline" role="alert">
+              <span>🔴</span>
+              <span>
+                {t('auth.errors.backendOffline')}
+                <br />
+                <code style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                  npm run server
+                </code>
+              </span>
+            </div>
+          )}
+          {error && backendStatus !== 'offline' && (
             <div className="error-message" role="alert">
               <span>⚠️</span>
               <span>{error}</span>

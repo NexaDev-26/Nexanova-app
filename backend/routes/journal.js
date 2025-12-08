@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { verifyToken } = require('./auth');
 const { awardPoints } = require('./user');
+const { invalidateUserCache } = require('../utils/cache');
 
 // Get all journal entries
 router.get('/', verifyToken, (req, res) => {
@@ -44,6 +45,10 @@ router.post('/', verifyToken, (req, res) => {
       awardPoints(req.userId, points, 'Journal entry').catch(err => {
         console.error('Error awarding journal points:', err);
       });
+      
+      // Invalidate user cache
+      invalidateUserCache(req.userId);
+      
       res.json({ success: true, entry_id: this.lastID });
     }
   );
@@ -97,6 +102,10 @@ router.patch('/:id', verifyToken, (req, res) => {
         if (err) {
           return res.status(500).json({ success: false, message: 'Error updating journal entry' });
         }
+        
+        // Invalidate user cache
+        invalidateUserCache(req.userId);
+        
         res.json({ success: true });
       }
     );
@@ -114,6 +123,10 @@ router.delete('/:id', verifyToken, (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ success: false, message: 'Journal entry not found' });
     }
+    
+    // Invalidate user cache
+    invalidateUserCache(req.userId);
+    
     res.json({ success: true });
   });
 });

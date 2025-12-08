@@ -161,33 +161,33 @@ router.patch('/goals/:id', verifyToken, (req, res) => {
       return res.status(404).json({ success: false, message: 'Goal not found' });
     }
 
-    const updates = [];
-    const params = [];
+  const updates = [];
+  const params = [];
 
-    if (title !== undefined) { updates.push('title = ?'); params.push(title); }
-    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
-    if (target_amount !== undefined) { updates.push('target_amount = ?'); params.push(target_amount); }
-    if (current_amount !== undefined) { updates.push('current_amount = ?'); params.push(current_amount); }
-    if (deadline !== undefined) { updates.push('deadline = ?'); params.push(deadline); }
-    if (is_completed !== undefined) { updates.push('is_completed = ?'); params.push(is_completed ? 1 : 0); }
+  if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+  if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+  if (target_amount !== undefined) { updates.push('target_amount = ?'); params.push(target_amount); }
+  if (current_amount !== undefined) { updates.push('current_amount = ?'); params.push(current_amount); }
+  if (deadline !== undefined) { updates.push('deadline = ?'); params.push(deadline); }
+  if (is_completed !== undefined) { updates.push('is_completed = ?'); params.push(is_completed ? 1 : 0); }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ success: false, message: 'No fields to update' });
-    }
+  if (updates.length === 0) {
+    return res.status(400).json({ success: false, message: 'No fields to update' });
+  }
 
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    params.push(id, req.userId);
+  updates.push('updated_at = CURRENT_TIMESTAMP');
+  params.push(id, req.userId);
 
-    db.run(
-      `UPDATE savings_goals SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
-      params,
-      function(err) {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error updating goal' });
-        }
-        if (this.changes === 0) {
-          return res.status(404).json({ success: false, message: 'Goal not found' });
-        }
+  db.run(
+    `UPDATE savings_goals SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+    function(err) {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error updating goal' });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ success: false, message: 'Goal not found' });
+      }
 
         // Check if goal was just completed
         const newCurrentAmount = current_amount !== undefined ? current_amount : goal.current_amount;
@@ -203,9 +203,9 @@ router.patch('/goals/:id', verifyToken, (req, res) => {
           });
         }
 
-        res.json({ success: true });
-      }
-    );
+      res.json({ success: true });
+    }
+  );
   });
 });
 

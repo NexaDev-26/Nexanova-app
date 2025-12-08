@@ -30,19 +30,41 @@ const Journal = () => {
   const loadEntries = async () => {
     try {
       const response = await api.get('/journal');
-      if (response.data.success) {
-        const entriesWithParsedTags = response.data.entries.map(entry => ({
+      if (response.data && response.data.success) {
+        const entriesWithParsedTags = (response.data.entries || []).map(entry => ({
           ...entry,
           tags: entry.tags ? (typeof entry.tags === 'string' ? JSON.parse(entry.tags) : entry.tags) : []
         }));
         setEntries(entriesWithParsedTags);
+        
+        // Sync with localStorage
+        try {
+          localStorage.setItem('journalEntries', JSON.stringify(entriesWithParsedTags));
+        } catch (e) {
+          console.warn('Could not save entries to localStorage:', e);
+        }
+      } else {
+        showToast('Failed to load journal entries', 'error');
+        // Fallback to localStorage
+        const savedEntries = localStorage.getItem('journalEntries');
+        if (savedEntries) {
+          setEntries(JSON.parse(savedEntries));
+        }
       }
     } catch (error) {
       console.error('Error loading entries:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load entries';
+      showToast(errorMessage, 'error');
+      
       // Fallback to localStorage for offline mode
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
-        setEntries(JSON.parse(savedEntries));
+        try {
+          setEntries(JSON.parse(savedEntries));
+          showToast('Loaded entries from offline storage', 'info');
+        } catch (e) {
+          console.error('Error parsing saved entries:', e);
+        }
       }
     }
   };
@@ -61,7 +83,7 @@ const Journal = () => {
         date: newEntry.date
       });
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         soundEffects.success();
         showToast('Journal entry saved successfully! 📔', 'success');
         await loadEntries();
@@ -73,28 +95,39 @@ const Journal = () => {
           date: new Date().toISOString().split('T')[0]
         });
         setShowAddForm(false);
+      } else {
+        showToast(response.data?.message || 'Failed to save entry', 'error');
       }
     } catch (error) {
       console.error('Error adding entry:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save entry';
+      showToast(errorMessage, 'error');
+      
       // Fallback: save to localStorage for offline
-      const entry = {
-        id: Date.now(),
-        ...newEntry,
-        tags: newEntry.tags.split(',').map(t => t.trim()).filter(t => t),
-        created_at: new Date().toISOString()
-      };
-      const updatedEntries = [entry, ...entries];
-      setEntries(updatedEntries);
-      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
-      showToast('Entry saved offline. Will sync when online.', 'info');
-      setNewEntry({
-        title: '',
-        content: '',
-        mood: 5,
-        tags: '',
-        date: new Date().toISOString().split('T')[0]
-      });
-      setShowAddForm(false);
+      try {
+        const entry = {
+          id: Date.now(),
+          ...newEntry,
+          tags: newEntry.tags.split(',').map(t => t.trim()).filter(t => t),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          _pendingSync: true // Mark for sync
+        };
+        const updatedEntries = [entry, ...entries];
+        setEntries(updatedEntries);
+        localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+        showToast('Entry saved offline. Will sync when online.', 'info');
+        setNewEntry({
+          title: '',
+          content: '',
+          mood: 5,
+          tags: '',
+          date: new Date().toISOString().split('T')[0]
+        });
+        setShowAddForm(false);
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
     }
   };
 

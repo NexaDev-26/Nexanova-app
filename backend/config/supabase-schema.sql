@@ -319,17 +319,29 @@ ALTER TABLE rewards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journey_blueprints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
 
--- Users: Users can read/update their own data
+-- Users: Backend operations (using service role key bypasses RLS)
+-- For custom JWT auth, backend uses service role key which bypasses all RLS
+-- These policies are for frontend direct access (if needed)
+
+-- Allow backend to insert users (service role bypasses this, but good to have)
+CREATE POLICY "Backend can insert users" ON users
+    FOR INSERT WITH CHECK (true);
+
+-- Allow backend to read users (for login/verification)
+CREATE POLICY "Backend can read users" ON users
+    FOR SELECT USING (true);
+
+-- Allow backend to update users (for profile updates)
+CREATE POLICY "Backend can update users" ON users
+    FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Users can view own profile (if using Supabase Auth)
 CREATE POLICY "Users can view own profile" ON users
     FOR SELECT USING (auth.uid()::text = id::text);
 
+-- Users can update own profile (if using Supabase Auth)
 CREATE POLICY "Users can update own profile" ON users
     FOR UPDATE USING (auth.uid()::text = id::text);
-
--- For now, allow service role to insert users (handled by backend)
--- You can restrict this further based on your auth setup
-CREATE POLICY "Service can insert users" ON users
-    FOR INSERT WITH CHECK (true);
 
 -- Habits: Users can manage their own habits
 CREATE POLICY "Users can manage own habits" ON habits

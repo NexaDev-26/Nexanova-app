@@ -22,6 +22,7 @@ const financeRoutes = require('./routes/finance');
 const journalRoutes = require('./routes/journal');
 const chatRoutes = require('./routes/chat');
 const rewardsRoutes = require('./routes/rewards');
+const passwordResetRoutes = require('./routes/passwordReset');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -178,6 +179,7 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/rewards', rewardsRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATIC FILES (Production)

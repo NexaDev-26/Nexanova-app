@@ -398,11 +398,36 @@ const FinanceTracker = () => {
   const loadTransactions = async () => {
     try {
       const response = await api.get('/finance');
-      if (response.data.success) {
-        setTransactions(response.data.finance || []);
+      if (response.data && response.data.success) {
+        const transactionsList = response.data.finance || [];
+        setTransactions(transactionsList);
+        // Sync with localStorage for offline support
+        try {
+          localStorage.setItem('financeTransactions', JSON.stringify(transactionsList));
+        } catch (e) {
+          console.warn('Could not save transactions to localStorage:', e);
+        }
+      } else {
+        showToast('Failed to load transactions', 'error');
+        setTransactions([]);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load transactions';
+      showToast(errorMessage, 'error');
+      
+      // Fallback to localStorage
+      try {
+        const saved = localStorage.getItem('financeTransactions');
+        if (saved) {
+          setTransactions(JSON.parse(saved));
+          showToast('Loaded transactions from offline storage', 'info');
+        }
+      } catch (e) {
+        console.error('Error loading from localStorage:', e);
+      }
+      
+      setTransactions([]);
     }
   };
 
@@ -445,9 +470,9 @@ const FinanceTracker = () => {
         setBudget(response.data.budget.amount || 0);
       } else {
         // Fallback to localStorage
-        const savedBudget = localStorage.getItem('budget');
-        if (savedBudget) {
-          setBudget(parseFloat(savedBudget));
+    const savedBudget = localStorage.getItem('budget');
+    if (savedBudget) {
+      setBudget(parseFloat(savedBudget));
         }
       }
     } catch (error) {
@@ -473,9 +498,9 @@ const FinanceTracker = () => {
         }
       } else {
         // Fallback to localStorage
-        const savedGoal = localStorage.getItem('savingsGoal');
-        if (savedGoal) {
-          setSavingsGoal(JSON.parse(savedGoal));
+    const savedGoal = localStorage.getItem('savingsGoal');
+    if (savedGoal) {
+      setSavingsGoal(JSON.parse(savedGoal));
         }
       }
     } catch (error) {
@@ -489,17 +514,27 @@ const FinanceTracker = () => {
   };
 
   const handleAddTransaction = async () => {
-    if (!newTransaction.amount || !newTransaction.category) return;
+    if (!newTransaction.amount || !newTransaction.category || !newTransaction.type || !newTransaction.date) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
 
     try {
-      const response = await api.post('/finance', {
-        ...newTransaction,
-        amount: parseFloat(newTransaction.amount)
-      });
+      const transactionData = {
+        type: newTransaction.type,
+        category: newTransaction.category,
+        amount: parseFloat(newTransaction.amount),
+        date: newTransaction.date,
+        description: newTransaction.description || null,
+        recurring: newTransaction.recurring ? 1 : 0
+      };
 
-      if (response.data.success) {
-        await loadTransactions();
-        await loadSummary();
+      const response = await api.post('/finance', transactionData);
+
+      if (response.data && response.data.success) {
+        soundEffects.success();
+        showToast('Transaction added successfully! 💰', 'success');
+        await loadAllData();
         setNewTransaction({
           type: 'expense',
           category: '',
@@ -509,11 +544,30 @@ const FinanceTracker = () => {
           recurring: false
         });
         setShowAddForm(false);
-        showToast('Transaction added successfully!', 'success');
+      } else {
+        showToast(response.data?.message || 'Failed to add transaction', 'error');
       }
     } catch (error) {
       console.error('Error adding transaction:', error);
-      showToast('Failed to add transaction. Please try again.', 'error');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to add transaction';
+      showToast(errorMessage, 'error');
+      
+      // Fallback: save to localStorage
+      try {
+        const tempTransaction = {
+          id: Date.now(),
+          ...transactionData,
+          user_id: user?.id || null,
+          created_at: new Date().toISOString(),
+          _pendingSync: true // Mark for sync
+        };
+        const updated = [tempTransaction, ...transactions];
+        setTransactions(updated);
+        localStorage.setItem('financeTransactions', JSON.stringify(updated));
+        showToast('Transaction saved offline. Will sync when online.', 'info');
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
     }
   };
 

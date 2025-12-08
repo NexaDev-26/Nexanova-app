@@ -41,16 +41,43 @@ const HabitTracker = () => {
   // Define all functions first before using them
   const loadHabits = async (showArchived = false) => {
     try {
+      setLoading(true);
       const response = await api.get(`/habits${showArchived ? '?archived=true' : ''}`);
-      if (response.data.success) {
-        setHabits(response.data.habits || []);
-        return response.data.habits || [];
+      if (response.data && response.data.success) {
+        const habitsList = response.data.habits || [];
+        setHabits(habitsList);
+        // Sync with localStorage for offline support
+        try {
+          localStorage.setItem('habits', JSON.stringify(habitsList));
+        } catch (e) {
+          console.warn('Could not save habits to localStorage:', e);
+        }
+        return habitsList;
+      } else {
+        showToast('Failed to load habits. Invalid response format.', 'error');
+        return [];
       }
-      return [];
     } catch (error) {
       console.error('Error loading habits:', error);
-      showToast('Failed to load habits. Please try again.', 'error');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load habits';
+      showToast(errorMessage, 'error');
+      
+      // Fallback to localStorage for offline mode
+      try {
+        const savedHabits = localStorage.getItem('habits');
+        if (savedHabits) {
+          const parsed = JSON.parse(savedHabits);
+          setHabits(parsed);
+          showToast('Loaded habits from offline storage', 'info');
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Error loading from localStorage:', e);
+      }
+      
       return [];
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -191,7 +218,9 @@ const HabitTracker = () => {
 
       const response = await api.post('/habits', habitData);
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
+        soundEffects.success();
+        showToast('Habit created successfully! ✅', 'success');
         // Reload all data
         await loadAllData();
         setNewHabit({
@@ -206,9 +235,8 @@ const HabitTracker = () => {
           replacement: ''
         });
         setShowAddForm(false);
-        showToast('Habit created successfully! ✨', 'success');
       } else {
-        showToast(response.data.message || 'Failed to create habit', 'error');
+        showToast(response.data?.message || 'Failed to create habit', 'error');
       }
     } catch (error) {
       console.error('Error adding habit:', error);
@@ -216,6 +244,28 @@ const HabitTracker = () => {
                           error.message || 
                           'Failed to add habit. Please check your connection and try again.';
       showToast(errorMessage, 'error');
+      
+      // Fallback: save to localStorage for offline
+      try {
+        const tempHabit = {
+          id: Date.now(),
+          ...habitData,
+          user_id: null, // Will be set when syncing
+          streak: 0,
+          longest_streak: 0,
+          total_completions: 0,
+          is_active: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          _pendingSync: true // Mark for sync
+        };
+        const updatedHabits = [tempHabit, ...habits];
+        setHabits(updatedHabits);
+        localStorage.setItem('habits', JSON.stringify(updatedHabits));
+        showToast('Habit saved offline. Will sync when online.', 'info');
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
     }
   };
 

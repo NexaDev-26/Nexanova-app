@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { verifyToken } = require('./auth');
 const { awardPoints } = require('./user');
+const { invalidateUserCache } = require('../utils/cache');
 
 // Get all habits (optimized query - only select needed columns)
 router.get('/', verifyToken, (req, res) => {
@@ -120,6 +121,10 @@ router.post('/', verifyToken, (req, res) => {
         });
       }
       console.log(`✅ Habit created successfully: ID ${this.lastID}, Title: ${cleanTitle}, User: ${req.userId}`);
+      
+      // Invalidate user cache
+      invalidateUserCache(req.userId);
+      
       res.json({ 
         success: true, 
         habit_id: this.lastID, 
@@ -338,16 +343,16 @@ router.get('/:id/completions', verifyToken, (req, res) => {
     }
 
     // Now fetch completions
-    db.all(
-      'SELECT * FROM habit_completions WHERE habit_id = ? ORDER BY completion_date DESC',
-      [id],
-      (err, completions) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error fetching completions' });
-        }
-        res.json({ success: true, completions });
+  db.all(
+    'SELECT * FROM habit_completions WHERE habit_id = ? ORDER BY completion_date DESC',
+    [id],
+    (err, completions) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error fetching completions' });
       }
-    );
+      res.json({ success: true, completions });
+    }
+  );
   });
 });
 
@@ -423,6 +428,10 @@ router.put('/:id', verifyToken, (req, res) => {
           });
         }
         console.log(`✅ Habit updated successfully: ID ${id}, Title: ${cleanTitle}`);
+        
+        // Invalidate user cache
+        invalidateUserCache(req.userId);
+        
         res.json({ 
           success: true, 
           message: 'Habit updated successfully',
@@ -444,6 +453,10 @@ router.delete('/:id', verifyToken, (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ success: false, message: 'Habit not found' });
     }
+    
+    // Invalidate user cache
+    invalidateUserCache(req.userId);
+    
     res.json({ success: true });
   });
 });

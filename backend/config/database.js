@@ -102,6 +102,16 @@ db.serialize(() => {
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+  
+  // Add recurring column to existing finance table if it doesn't exist
+  db.run(`ALTER TABLE finance ADD COLUMN recurring INTEGER DEFAULT 0`, (err) => {
+    // Ignore error if column already exists
+    if (err && !err.message.includes('duplicate column') && !err.message.includes('duplicate column name')) {
+      console.warn('Warning adding recurring column:', err.message);
+    } else if (!err) {
+      console.log('✅ Added recurring column to finance table');
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // JOURNAL ENTRIES TABLE
@@ -216,6 +226,7 @@ db.serialize(() => {
   db.run('CREATE INDEX IF NOT EXISTS idx_finance_user_date ON finance(user_id, date)');
   db.run('CREATE INDEX IF NOT EXISTS idx_finance_user_type ON finance(user_id, type)');
   db.run('CREATE INDEX IF NOT EXISTS idx_finance_category ON finance(category)');
+  // Note: idx_finance_recurring is created later after ensuring column exists
   
   // Journal entries indexes
   db.run('CREATE INDEX IF NOT EXISTS idx_journal_user_id ON journal_entries(user_id)');
@@ -240,6 +251,23 @@ db.serialize(() => {
   // Budgets indexes
   db.run('CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_budgets_user_active ON budgets(user_id, is_active)');
+  
+  // Additional performance indexes
+  db.run('CREATE INDEX IF NOT EXISTS idx_habits_start_date ON habits(start_date)');
+  // Create recurring index - handle error gracefully if column doesn't exist yet
+  // (will be created on next restart after ALTER TABLE adds the column)
+  db.run('CREATE INDEX IF NOT EXISTS idx_finance_recurring ON finance(recurring)', (err) => {
+    if (err && err.message.includes('no such column')) {
+      // Column will be added by ALTER TABLE above, index will be created on next restart
+      console.log('ℹ️ Recurring index will be created after column is added');
+    } else if (err && !err.message.includes('already exists')) {
+      console.warn('Warning creating recurring index:', err.message);
+    }
+  });
+  db.run('CREATE INDEX IF NOT EXISTS idx_finance_user_type_date ON finance(user_id, type, date)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_journal_user_mood ON journal_entries(user_id, mood)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_habit_completions_habit_date_mood ON habit_completions(habit_id, completion_date, mood)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_finance_user_category ON finance(user_id, category)');
 
   console.log('✅ Database indexes created for optimization');
 });
